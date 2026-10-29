@@ -7,6 +7,8 @@
 - 入力: Windowsは常駐のアプリが画面の下の小窓に文字起こしを流し、話し終えたら清書した全文を`SendInput`で前面のアプリへ打ち込みます。MacもメニューバーのアプリでWindowsと同じように動きます（キー入力はCGEvent）。Androidは音声入力だけのキーボードで、Gboardなどから切り替えて話すと文字起こしが未確定の文字で流れ、終わると清書した全文で確定して元のキーボードへ戻ります。
 - 管理画面: アクセスキー・履歴・清書に使う言葉・利用者・清書のモデルとClaudeのAPIキーを管理します。ブラウザーのマイクで試せるプレイグラウンドもあります。
 
+![管理画面のプレイグラウンド（話し終えたあと、清書した全文に置き換わったところ）](docs/images/web-playground.png)
+
 ## 構成
 
 | 置き場所 | 中身 |
@@ -50,10 +52,44 @@ ClaudeのAPIキーは、管理画面の「サーバー」でも入れられま�
 
 ## 端末をつなぐ
 
-1. 管理画面の「アクセスキー」でキーを作ります。キーは作った直後に一度だけ表示します。
-2. Windows: [リリース](https://github.com/aida0710/kikitori/releases)の`Kikitori-windows-x64.zip`を展開して`Kikitori.exe`を起動し、設定画面にサーバーのURLとアクセスキーを入れます。入力欄を選んでから**Ctrl+Alt+Space**で話し始め、もう一度押すか8秒黙ると止まります。
-3. Mac: リリースの`Kikitori-macos.zip`を展開して`Kikitori.app`を開きます（署名していないので、初回はシステム設定の「プライバシーとセキュリティ」で「このまま開く」を押すか、ターミナルで`xattr -dr com.apple.quarantine Kikitori.app`を実行します）。設定画面にサーバーのURLとアクセスキーを入れ、「アクセシビリティ」でKikitoriを許可します（文字を打ち込むために要ります）。**Shift+Option+Space**で話し始めます。
-4. Android: リリースのAPKを入れてKikitoriのアプリを開き、マイクを許可し、Kikitoriのキーボードをオンにして、サーバーのURLとアクセスキーを入れます。入力中にキーボードの切り替えでKikitoriを選ぶと、すぐに聞き始めます。
+[最新のリリース](https://github.com/aida0710/kikitori/releases/latest)から、端末ごとのファイルを取ってきます。どれも、管理画面の「アクセスキー」で作ったキーと、サーバーのURLを入れて使います（キーは作った直後に一度だけ表示します）。
+
+| 端末 | ファイル | 話し始めるには |
+|---|---|---|
+| Windows 10・11（64ビット） | `Kikitori-windows-x64.zip` | **Ctrl+Alt+Space** |
+| Mac（macOS 14以上、Apple SiliconとIntel） | `Kikitori-macos.zip` | **Shift+Option+Space** |
+| Android 9以上 | `Kikitori-android.apk` | キーボードの切り替えでKikitoriを選ぶ |
+
+### Windows
+
+1. `Kikitori-windows-x64.zip`を展開し、`Kikitori.exe`を好きな場所（例: `%LOCALAPPDATA%\Kikitori`）に置いて開きます。署名していないので、初回は「WindowsによってPCが保護されました」と出ます。「詳細情報」→「実行」を押します。
+2. 設定画面にサーバーのURLとアクセスキーを入れ、「接続を試す」→「保存」を押します。「Windowsにサインインしたら開く」を入れておくと、次からは自動で常駐します。
+3. 文字を入れたい欄を選んでから**Ctrl+Alt+Space**で話し始めます。話している間は画面の下の小窓に文字起こしが流れ、もう一度押すか8秒黙ると止まり、清書した全文を入力欄へ打ち込みます。
+4. 設定を変えるときは、タスクトレイのアイコンを右クリックして「設定」を選ぶか、`Kikitori.exe`をもう一度開きます。
+
+![Windowsの小窓](docs/images/windows-dictation.png)
+
+![Windowsの設定画面](docs/images/windows-settings.png)
+
+### Mac
+
+1. `Kikitori-macos.zip`を展開し、`Kikitori.app`を「アプリケーション」に置きます。
+2. 署名していないので、初回はそのままでは開けません。ターミナルで`xattr -dr com.apple.quarantine /Applications/Kikitori.app`を実行してから開くか、開こうとしたあとシステム設定の「プライバシーとセキュリティ」で「このまま開く」を押します。
+3. メニューバーにマイクの印が出て、設定画面が開きます。サーバーのURLとアクセスキーを入れて「接続を試す」→「保存」を押します。
+4. 設定画面の「アクセシビリティ」で「システム設定を開く」を押し、Kikitoriをオンにします（文字を打ち込むために要ります）。初めて話すときはマイクの許可も求められます。
+5. 文字を入れたい欄を選んでから**Shift+Option+Space**で話し始めます。ログインのときに開くには、システム設定の「一般」→「ログイン項目」にKikitoriを足します。
+
+Mac版を新しいバージョンに入れ替えると、アクセシビリティの許可をやり直す必要があります（署名が毎回変わるため）。
+
+![Macの小窓](docs/images/macos-dictation.png)
+
+### Android
+
+1. `Kikitori-android.apk`をスマホで開いて入れます（初回は「提供元不明のアプリ」の許可を求められます）。試験版（`Kikitori-android-debug.apk`）を入れていたときは、先にそれを消してください（署名が違うので上書きできません）。
+2. Kikitoriのアプリを開き、「マイクを許可する」と「Kikitoriのキーボードをオンにする」を押します。サーバーのURLとアクセスキーを入れて「接続を試す」→「保存」を押します。アプリの下の「ここで試す」で試せます。
+3. ふだんのキーボード（Gboardなど）で入力しているときに、キーボードの切り替えでKikitoriを選ぶと、すぐに聞き始めます。話している間は文字起こしが未確定の文字で流れ、マイクを押すか8秒黙ると、清書した全文で確定して元のキーボードへ戻ります。
+
+![Androidの音声入力の面](docs/images/android-dictation.png)
 
 ## 開発
 
