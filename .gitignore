@@ -18,3 +18,4 @@ clients/android/local.properties
 clients/windows/out/
 clients/windows/*.zip
 clients/android/.kotlin/
+clients/*.apk
