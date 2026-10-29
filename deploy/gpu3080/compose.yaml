@@ -40,7 +40,7 @@ services:
       - 10.0.10.178:8780:8780
 
   https:
-    # Haru の入口と同じ Caddy のイメージ（この計算機にもうある）
+    # Caddy 2（digest で固定）
     image: caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
     restart: unless-stopped
     depends_on:
