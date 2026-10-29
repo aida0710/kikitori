@@ -48,7 +48,7 @@ class WorkerSettings:
             language=os.environ.get("KIKITORI_ASR_LANGUAGE", "Japanese"),
             decode_interval_ms=_read_int("KIKITORI_ASR_DECODE_INTERVAL_MS", 500),
             min_silence_ms=_read_int("KIKITORI_ASR_MIN_SILENCE_MS", 600),
-            max_segment_ms=_read_int("KIKITORI_ASR_MAX_SEGMENT_MS", 20000),
+            max_segment_ms=_read_int("KIKITORI_ASR_MAX_SEGMENT_MS", 12000),
             speech_pad_ms=_read_int("KIKITORI_ASR_SPEECH_PAD_MS", 300),
             access_token=os.environ.get("KIKITORI_ASR_TOKEN") or None,
         )
