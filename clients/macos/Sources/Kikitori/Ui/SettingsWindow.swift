@@ -77,6 +77,9 @@ private struct SettingsForm: View {
             }
         }
         .formStyle(.grouped)
+        // 項目は少ないので、スクロールさせずに中身の高さの窓にする
+        .scrollDisabled(true)
+        .fixedSize(horizontal: false, vertical: true)
         .padding(8)
         .frame(width: 460)
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
