@@ -21,3 +21,4 @@ clients/android/.kotlin/
 clients/*.apk
 clients/macos/.build/
 clients/macos/build/
+clients/*.zip
