@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>io.github.aida0710.kikitori</string>
+    <key>CFBundleName</key>
+    <string>Kikitori</string>
+    <key>CFBundleDisplayName</key>
+    <string>Kikitori</string>
+    <key>CFBundleExecutable</key>
+    <string>Kikitori</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>__VERSION__</string>
+    <key>CFBundleVersion</key>
+    <string>__VERSION__</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <!-- メニューバーにだけ出す（Dock に出さない） -->
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>話した言葉を文字にするため、マイクの音をKikitoriのサーバーへ送ります。</string>
+    <!-- サーバーは LAN・VPN の中の http（例 http://10.0.10.178:8780）でも使えるようにする -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+</dict>
+</plist>

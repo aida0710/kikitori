@@ -19,3 +19,5 @@ clients/windows/out/
 clients/windows/*.zip
 clients/android/.kotlin/
 clients/*.apk
+clients/macos/.build/
+clients/macos/build/

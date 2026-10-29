@@ -1,0 +1,41 @@
+# Mac 版を組み立てる。試験・.app と zip の組み立て・小窓の見本の画面を撮って、成果物にする。
+# リポジトリが非公開の間は macOS の実行時間を多めに使うので、Mac 版を変えたときと手で動かしたときだけ動かす
+name: macOS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "clients/macos/**"
+      - ".github/workflows/macos.yml"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "版（Info.plist に入れる）"
+        default: "0.1.0"
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: clients/macos
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - run: swift test
+      - run: tools/build-app.sh "${{ inputs.version || '0.1.0' }}"
+      - name: 小窓の見本を出して画面を撮る
+        run: |
+          build/Kikitori.app/Contents/MacOS/Kikitori --show-panel-demo &
+          sleep 4
+          screencapture -x build/panel-demo.png || echo "screencapture failed"
+          wait || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kikitori-macos
+          path: |
+            clients/macos/build/Kikitori-macos.zip
+            clients/macos/build/panel-demo.png
+          if-no-files-found: warn
