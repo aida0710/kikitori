@@ -108,7 +108,7 @@ export const dictationSchema = z.object({
   correctionModel: z.string().nullable(),
   inputTokens: z.number(),
   outputTokens: z.number(),
-  maxCorrectionMs: z.number().nullable(),
+  correctionMs: z.number().nullable(),
   error: z.string().nullable(),
 });
 export type Dictation = z.infer<typeof dictationSchema>;

@@ -4,8 +4,13 @@ import XCTest
 
 final class KikitoriCoreTests: XCTestCase {
     func test区切りの知らせを読める() {
-        let json = #"{"type":"segment","segment":2,"raw":"えー明日","text":"明日","corrected":true}"#
-        XCTAssertEqual(DictationEvent.parse(Data(json.utf8)), .segment(segment: 2, raw: "えー明日", text: "明日", corrected: true))
+        let json = #"{"type":"segment","segment":2,"text":"えー明日"}"#
+        XCTAssertEqual(DictationEvent.parse(Data(json.utf8)), .segment(segment: 2, text: "えー明日"))
+    }
+
+    func test終わりの知らせで清書した全文を読める() {
+        let json = #"{"type":"end","text":"明日。","corrected":true,"cancelled":false}"#
+        XCTAssertEqual(DictationEvent.parse(Data(json.utf8)), .end(text: "明日。", corrected: true, cancelled: false))
     }
 
     func test知らない種類の知らせは無視する() {

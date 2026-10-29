@@ -19,7 +19,7 @@ function correctorReturning(correctedText: string) {
   });
 }
 
-const request = { text: "言わてては。", previousText: "", terms: [], instructions: "" };
+const request = { text: "言わてては。", terms: [], instructions: "" };
 
 describe("ClaudeCorrector", () => {
   it("清書が元の文よりずっと長いとき（説明を書いたとき）は使わない", async () => {
@@ -28,11 +28,22 @@ describe("ClaudeCorrector", () => {
   });
 
   it("清書に指示のタグが出てきたら使わない", async () => {
-    await expect(correctorReturning("<current>言わてては。").correct(request, new AbortController().signal)).rejects.toThrow("prompt tag");
+    await expect(correctorReturning("<transcript>言わてては。").correct(request, new AbortController().signal)).rejects.toThrow("prompt tag");
   });
 
   it("句読点を足した程度の清書はそのまま使う", async () => {
     const result = await correctorReturning("言わなくては。").correct(request, new AbortController().signal);
     expect(result).toMatchObject({ text: "言わなくては。", corrected: true });
+  });
+});
+
+describe("removeSpacesAroundLatin", () => {
+  it("日本語の文の中の英字・数字の前後の空白を取り除き、英字どうしの空白は残す", async () => {
+    const { removeSpacesAroundLatin } = await import("../src/dictation/japaneseSpacing.ts");
+    expect(removeSpacesAroundLatin("Kikitori の Qwen3-ASR のモデルは 1.7B を使ってます。")).toBe(
+      "KikitoriのQwen3-ASRのモデルは1.7Bを使ってます。",
+    );
+    expect(removeSpacesAroundLatin("Claude Code で 3 回試した。")).toBe("Claude Codeで3回試した。");
+    expect(removeSpacesAroundLatin("This is English.")).toBe("This is English.");
   });
 });

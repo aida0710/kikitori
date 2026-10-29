@@ -5,7 +5,8 @@ import type { ServerSettings, UserSettings } from "@kikitori/protocol";
 // 速さを優先して Haiku 5.5 を既定にする。管理画面で Sonnet 5.5・Opus 5.5 に変えられる
 const DEFAULT_SERVER_SETTINGS: ServerSettings = {
   correctionEnabled: true,
-  correctionModel: "claude-haiku-5-5",
+  // 全文の清書は、後ろの文まで見て同じ読みの言葉の誤認識を直す力が要る。比べたら Haiku より Sonnet が直せて、時間も変わらなかった
+  correctionModel: "claude-sonnet-5-5",
   correctionEffort: "low",
 };
 

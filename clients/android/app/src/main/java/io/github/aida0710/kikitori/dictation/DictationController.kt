@@ -15,14 +15,16 @@ interface DictationView {
     fun showFinishing()
     fun showLevel(level: Float)
     fun showPartial(segment: Int, text: String)
-    fun commitSegment(segment: Int, text: String)
+    fun showSegment(segment: Int, text: String)
     fun showError(message: String)
-    fun finished(reason: FinishReason)
+    /** finalText は入力欄に最後に残す文（清書した全文）。取り消し・失敗のときは null（入れた文字起こしの結果を残す）。 */
+    fun finished(reason: FinishReason, finalText: String?)
 }
 
 /**
  * 音声入力の状態（待機 → 聞いている → 清書を待つ → 待機）を進める。
- * 届いた知らせは主の糸へ移してから扱う。区切りが届くたびに、その文を入力欄へ確定させる。
+ * 届いた知らせは主の糸へ移してから扱う。区切りが届くたびに、文字起こしの結果を入力欄の未確定の文字に足し、
+ * 話し終えたら、清書した全文で置き換えて確定する。
  */
 class DictationController(
     private val view: DictationView,
@@ -96,18 +98,19 @@ class DictationController(
             }
             is DictationEvent.Segment -> {
                 lastActivity = SystemClock.elapsedRealtime()
-                view.commitSegment(event.segment, event.text)
+                view.showSegment(event.segment, event.text)
             }
             is DictationEvent.Error -> view.showError(event.message)
             is DictationEvent.Failed -> {
                 view.showError(connectionFailedMessage())
                 finish(FinishReason.Failed)
             }
-            is DictationEvent.End -> finish(if (event.cancelled) FinishReason.Cancelled else FinishReason.Done)
+            is DictationEvent.End ->
+                if (event.cancelled) finish(FinishReason.Cancelled) else finish(FinishReason.Done, finalText = event.text)
         }
     }
 
-    private fun finish(reason: FinishReason) {
+    private fun finish(reason: FinishReason, finalText: String? = null) {
         if (state == State.Idle) return
         state = State.Idle
         mainHandler.removeCallbacks(autoStopCheck)
@@ -115,7 +118,7 @@ class DictationController(
         audio = null
         connection?.close()
         connection = null
-        view.finished(reason)
+        view.finished(reason, finalText)
     }
 
     private companion object {

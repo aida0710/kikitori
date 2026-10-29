@@ -4,15 +4,14 @@ import Foundation
 public enum DictationEvent: Equatable {
     case ready(dictationId: Int)
     case partial(segment: Int, text: String)
-    case segment(segment: Int, raw: String, text: String, corrected: Bool)
-    case end(text: String, cancelled: Bool)
+    case segment(segment: Int, text: String)
+    case end(text: String, corrected: Bool, cancelled: Bool)
     case error(code: String, message: String)
 
     private struct Wire: Decodable {
         let type: String
         let dictationId: Int?
         let segment: Int?
-        let raw: String?
         let text: String?
         let corrected: Bool?
         let cancelled: Bool?
@@ -29,9 +28,9 @@ public enum DictationEvent: Equatable {
         case "partial":
             return .partial(segment: wire.segment ?? 0, text: wire.text ?? "")
         case "segment":
-            return .segment(segment: wire.segment ?? 0, raw: wire.raw ?? "", text: wire.text ?? "", corrected: wire.corrected ?? false)
+            return .segment(segment: wire.segment ?? 0, text: wire.text ?? "")
         case "end":
-            return .end(text: wire.text ?? "", cancelled: wire.cancelled ?? false)
+            return .end(text: wire.text ?? "", corrected: wire.corrected ?? false, cancelled: wire.cancelled ?? false)
         case "error":
             return .error(code: wire.code ?? "", message: wire.message ?? "")
         default:

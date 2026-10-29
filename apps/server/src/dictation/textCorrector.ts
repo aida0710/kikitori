@@ -1,10 +1,8 @@
-/** 確定した区切りの文を清書する。Claude（claudeCorrector.ts）と、そのまま返すものがある。 */
+/** 1 回の音声入力の全文を清書する。Claude（claudeCorrector.ts）と、そのまま返すものがある。 */
 
 export interface CorrectionRequest {
-  // 清書する区切りの文（文字起こしの結果）
+  // 清書する全文（話し終えたあとの文字起こしの結果）
   text: string;
-  // 同じ音声入力でこれまでに清書した文。続きとして自然にするために渡し、直さない
-  previousText: string;
   // 利用者が登録した言葉（人名・製品名など）
   terms: string[];
   instructions: string;

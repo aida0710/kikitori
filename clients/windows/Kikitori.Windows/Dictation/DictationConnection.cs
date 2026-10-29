@@ -10,8 +10,8 @@ namespace Kikitori.Windows.Dictation;
 internal abstract record DictationEvent;
 internal sealed record ReadyEvent(long DictationId) : DictationEvent;
 internal sealed record PartialEvent(int Segment, string Text) : DictationEvent;
-internal sealed record SegmentEvent(int Segment, string Raw, string Text, bool Corrected) : DictationEvent;
-internal sealed record EndEvent(string Text, bool Cancelled) : DictationEvent;
+internal sealed record SegmentEvent(int Segment, string Text) : DictationEvent;
+internal sealed record EndEvent(string Text, bool Corrected, bool Cancelled) : DictationEvent;
 internal sealed record ErrorEvent(string Code, string Message) : DictationEvent;
 
 /// <summary>1 回の音声入力の WebSocket（/v1/dictation）。送るのは 1 本の列に並べて順に送る。</summary>
@@ -113,9 +113,8 @@ internal sealed class DictationConnection : IAsyncDisposable
         {
             "ready" => new ReadyEvent(root.GetProperty("dictationId").GetInt64()),
             "partial" => new PartialEvent(root.GetProperty("segment").GetInt32(), Text("text")),
-            "segment" => new SegmentEvent(
-                root.GetProperty("segment").GetInt32(), Text("raw"), Text("text"), root.GetProperty("corrected").GetBoolean()),
-            "end" => new EndEvent(Text("text"), root.GetProperty("cancelled").GetBoolean()),
+            "segment" => new SegmentEvent(root.GetProperty("segment").GetInt32(), Text("text")),
+            "end" => new EndEvent(Text("text"), root.GetProperty("corrected").GetBoolean(), root.GetProperty("cancelled").GetBoolean()),
             "error" => new ErrorEvent(Text("code"), Text("message")),
             _ => null,
         };

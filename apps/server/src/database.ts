@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS dictations (
   correction_model TEXT,
   input_tokens INTEGER NOT NULL DEFAULT 0,
   output_tokens INTEGER NOT NULL DEFAULT 0,
-  max_correction_ms REAL,
+  correction_ms REAL,
   error TEXT
 );
 

@@ -8,14 +8,15 @@ namespace Kikitori.Windows.Dictation;
 
 /// <summary>
 /// 音声入力の状態（待機 → 聞いている → 清書を待つ → 待機）を進める。
-/// 確定した区切りが届くたびに、その文を前面のアプリへ打ち込む。打ち込んだ文字は消さない。
+/// 話している間は、文字起こしの結果を小窓にだけ出す。話し終えたら、清書した全文を前面のアプリへ一度に打つ
+/// （取り消したときは打たない）。打った文を Backspace で直すと崩れるアプリがあるので、打つのは 1 回だけにする。
 /// </summary>
 internal sealed class DictationController
 {
     private enum State { Idle, Listening, Finishing }
 
     private static readonly TimeSpan AutoStopCheckInterval = TimeSpan.FromSeconds(1);
-    // 最後の区切りを打ってから IME を戻すまでの間。文字を後から処理するアプリが、打った文字を
+    // 清書した全文を打ってから IME を戻すまでの間。文字を後から処理するアプリが、打った文字を
     // 受け取り終えるのを待つ（終わったことを知る手段が無いので時間で待つ。小窓が消えるのと同じ頃）
     private static readonly TimeSpan ImeResumeDelay = TimeSpan.FromSeconds(1);
 
@@ -105,7 +106,7 @@ internal sealed class DictationController
             Fail(current, UiText.MicrophoneFailed, error);
             return;
         }
-        // 最初の区切りは話し始めてから 0.6 秒以上あとに届くので、録音を始めてから IME をオフにしても間に合う
+        // 打つのは話し終えたあとなので、録音を始めてから IME をオフにしても間に合う
         var suspension = await ImeSuspension.SuspendIfOpenAsync(log);
         if (connection != current)
         {
@@ -181,8 +182,7 @@ internal sealed class DictationController
                 break;
             case SegmentEvent segment:
                 lastActivity = DateTime.UtcNow;
-                log($"segment {segment.Segment} corrected={segment.Corrected} text={segment.Text}");
-                TypeSegment(segment.Text);
+                log($"segment {segment.Segment} text={segment.Text}");
                 window.ShowCommitted(segment.Segment, segment.Text);
                 break;
             case ErrorEvent error:
@@ -190,14 +190,16 @@ internal sealed class DictationController
                 window.ShowError(error.Message);
                 break;
             case EndEvent end:
-                log($"end cancelled={end.Cancelled}");
-                _ = FinishAsync(source, end.Cancelled ? UiText.Cancelled : UiText.Done);
+                log($"end cancelled={end.Cancelled} corrected={end.Corrected} text={end.Text}");
+                _ = FinishAsync(source, end.Cancelled ? UiText.Cancelled : TypeFinalText(end.Text));
                 break;
         }
     }
 
-    private void TypeSegment(string text)
+    /// <summary>清書した全文を打つ。終わりの小窓に出す文を返す。</summary>
+    private string TypeFinalText(string text)
     {
+        window.ShowFinalText(text);
         try
         {
             TextTyper.Type(text);
@@ -205,8 +207,9 @@ internal sealed class DictationController
         catch (Exception error)
         {
             log($"typing failed: {error.Message}");
-            window.ShowError(UiText.TypingFailed);
+            return UiText.TypingFailed;
         }
+        return UiText.Done;
     }
 
     private void Fail(DictationConnection source, string message, Exception error)

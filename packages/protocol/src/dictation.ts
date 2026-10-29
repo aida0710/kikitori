@@ -31,18 +31,22 @@ export interface DictationPartialEvent {
   text: string;
 }
 
-/** 確定した区切り。segment の順に 1 回ずつ届く。text が入力欄へ入れる文。 */
+/** 確定した区切りの文字起こしの結果。segment の順に 1 回ずつ届く。端末はこれをそのまま入力欄へ入れる。 */
 export interface DictationSegmentEvent {
   type: "segment";
   segment: number;
-  raw: string;
   text: string;
-  corrected: boolean;
 }
 
+/**
+ * 音声入力の終わり。text は入力欄に最後に残す文で、話し終えてから全文を 1 回で清書したもの
+ * （清書しなかったとき・失敗したときは文字起こしの全文。corrected が false）。
+ * 端末は、区切りで入れた文をこの文で置き換える。取り消したとき（cancelled）は置き換えない。
+ */
 export interface DictationEndEvent {
   type: "end";
   text: string;
+  corrected: boolean;
   cancelled: boolean;
 }
 

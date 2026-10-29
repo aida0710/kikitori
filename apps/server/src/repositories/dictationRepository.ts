@@ -14,7 +14,7 @@ interface DictationRow {
   correction_model: string | null;
   input_tokens: number;
   output_tokens: number;
-  max_correction_ms: number | null;
+  correction_ms: number | null;
   error: string | null;
 }
 
@@ -27,7 +27,7 @@ export interface DictationOutcome {
   correctionModel: string | null;
   inputTokens: number;
   outputTokens: number;
-  maxCorrectionMs: number | null;
+  correctionMs: number | null;
   error: string | null;
 }
 
@@ -44,7 +44,7 @@ function toDictation(row: DictationRow): Dictation {
     correctionModel: row.correction_model,
     inputTokens: row.input_tokens,
     outputTokens: row.output_tokens,
-    maxCorrectionMs: row.max_correction_ms,
+    correctionMs: row.correction_ms,
     error: row.error,
   };
 }
@@ -68,7 +68,7 @@ export class DictationRepository {
       .prepare(
         `UPDATE dictations SET ended_at = ?, audio_ms = ?, segment_count = ?, raw_text = ?,
            corrected_text = ?, correction_model = ?, input_tokens = ?, output_tokens = ?,
-           max_correction_ms = ?, error = ?
+           correction_ms = ?, error = ?
          WHERE id = ?`,
       )
       .run(
@@ -80,7 +80,7 @@ export class DictationRepository {
         outcome.correctionModel,
         outcome.inputTokens,
         outcome.outputTokens,
-        outcome.maxCorrectionMs,
+        outcome.correctionMs,
         outcome.error,
         id,
       );

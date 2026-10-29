@@ -7,27 +7,36 @@ export type PlaygroundState = "idle" | "connecting" | "listening" | "finishing";
 
 export interface PlaygroundSegment {
   index: number;
-  raw: string;
+  // 文字起こしの結果（清書の前）
   text: string;
-  corrected: boolean;
   // 話し始めからこの区切りが届くまで（ミリ秒）
   arrivedAfterMs: number;
 }
 
+/** 話し終えたあとに届く、入力欄に残す全文。 */
+export interface PlaygroundResult {
+  text: string;
+  corrected: boolean;
+  // 止めてから届くまで（ミリ秒）。清書にかかった時間の目安
+  arrivedAfterStopMs: number;
+}
+
 /**
  * プレイグラウンドの 1 回の音声入力。マイクの音を送り、途中結果と確定した区切りを受け取る。
- * 終わり方は端末と同じ（止める → 残りの区切りの清書を待つ → end）。
+ * 終わり方は端末と同じ（止める → 全文の清書を待つ → end で清書した全文が届く）。
  */
 export function usePlaygroundSession() {
   const [state, setState] = useState<PlaygroundState>("idle");
   const [segments, setSegments] = useState<PlaygroundSegment[]>([]);
-  // 清書を待っている区切りより先に、次の区切りの途中結果が届くことがあるので、区切りの番号と組で持つ
+  // 確定した区切りより後の区切りの途中結果だけを出すため、区切りの番号と組で持つ
   const [partial, setPartial] = useState<{ segment: number; text: string } | null>(null);
+  const [result, setResult] = useState<PlaygroundResult | null>(null);
   const [level, setLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const microphone = useRef<MicrophoneStream | null>(null);
   const socket = useRef<DictationSocket | null>(null);
   const startedAt = useRef(0);
+  const stoppedAt = useRef(0);
 
   const releaseMicrophone = useCallback(() => {
     microphone.current?.stop();
@@ -48,7 +57,7 @@ export function usePlaygroundSession() {
           setPartial((current) => (current && current.segment > event.segment ? current : null));
           setSegments((current) => [
             ...current,
-            { index: event.segment, raw: event.raw, text: event.text, corrected: event.corrected, arrivedAfterMs: performance.now() - startedAt.current },
+            { index: event.segment, text: event.text, arrivedAfterMs: performance.now() - startedAt.current },
           ]);
           return;
         case "error":
@@ -57,6 +66,13 @@ export function usePlaygroundSession() {
         case "end":
           releaseMicrophone();
           setPartial(null);
+          if (!event.cancelled) {
+            setResult({
+              text: event.text,
+              corrected: event.corrected,
+              arrivedAfterStopMs: performance.now() - (stoppedAt.current || startedAt.current),
+            });
+          }
           setState("idle");
           return;
       }
@@ -69,8 +85,10 @@ export function usePlaygroundSession() {
       setError(null);
       setSegments([]);
       setPartial(null);
+      setResult(null);
       setState("connecting");
       startedAt.current = performance.now();
+      stoppedAt.current = 0;
       const current = openDictationSocket({
         correction,
         onEvent: handleEvent,
@@ -95,6 +113,7 @@ export function usePlaygroundSession() {
   );
 
   const stop = useCallback(() => {
+    stoppedAt.current = performance.now();
     releaseMicrophone();
     socket.current?.stop();
     setState("finishing");
@@ -108,6 +127,7 @@ export function usePlaygroundSession() {
   const clear = useCallback(() => {
     setSegments([]);
     setPartial(null);
+    setResult(null);
     setError(null);
   }, []);
 
@@ -117,5 +137,5 @@ export function usePlaygroundSession() {
     socket.current?.cancel();
   }, []);
 
-  return { state, segments, partial: partial?.text ?? "", level, error, start, stop, cancel, clear };
+  return { state, segments, partial: partial?.text ?? "", result, level, error, start, stop, cancel, clear };
 }

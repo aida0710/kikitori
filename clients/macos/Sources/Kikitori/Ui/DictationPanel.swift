@@ -147,6 +147,12 @@ final class DictationPanel: NSPanel {
         }
     }
 
+    /// 話し終えたあと、区切りで出した文を清書した全文に置き換える。
+    func showFinalText(_ text: String) {
+        model.committedText = text
+        model.partialText = ""
+    }
+
     func showFinished(_ status: String) {
         model.status = status
         model.listening = false

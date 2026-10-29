@@ -1,8 +1,9 @@
 /**
- * 1 回の音声入力。端末から届いた音声を文字起こしへ流し、確定した区切りを順に清書して端末へ返す。
+ * 1 回の音声入力。端末から届いた音声を文字起こしへ流し、確定した区切りをそのまま端末へ返す。
+ * 話し終えたら（文字起こしの end のあと）、全文を 1 回で清書して end で返す。
  *
- * 清書は区切りの順に 1 つずつ行う。前の区切りの清書を、次の区切りの文脈として渡すため。
- * 清書に失敗した区切りは、文字起こしの結果をそのまま返す（入力が止まらないことを優先する）。
+ * 区切りごとに清書しないのは、後ろの文まで見えた方が誤認識（同じ読みの言葉など）を直せるため。
+ * 清書に失敗したときは、文字起こしの全文を返す（入力が止まらないことを優先する）。
  */
 import type { DictationServerEvent } from "@kikitori/protocol";
 import type { AsrStream, AsrWorker, AsrWorkerEvent } from "./asrWorkerClient.ts";
@@ -21,9 +22,10 @@ export interface DictationSessionOptions {
   onFinished(outcome: DictationOutcome): void;
 }
 
-interface FinishedSegment {
-  raw: string;
+interface WholeTextCorrection {
   text: string;
+  corrected: boolean;
+  error: string | null;
 }
 
 export class DictationSession {
@@ -33,13 +35,12 @@ export class DictationSession {
   // 端末は接続してすぐ録音を始める。文字起こしの接続ができるまでに届いた音声はここに貯める
   private pendingAudio: Buffer[] = [];
   private stopRequested = false;
-  private correctionQueue: Promise<void> = Promise.resolve();
-  private readonly segments: FinishedSegment[] = [];
+  // 確定した区切りの文字起こしの結果（区切りの順）
+  private readonly segmentTexts: string[] = [];
   private receivedAudioBytes = 0;
   private inputTokens = 0;
   private outputTokens = 0;
-  private maxCorrectionMs: number | null = null;
-  private correctionError: string | null = null;
+  private correctionMs: number | null = null;
   // 常駐プロセスは end を送ったあと自分から接続を閉じる。そのあとの close は異常ではない
   private asrEnded = false;
   private finished = false;
@@ -93,7 +94,7 @@ export class DictationSession {
     }
     this.abortController.abort();
     this.asrStream?.close();
-    this.finish({ cancelled: true, error: null });
+    this.finishUncorrected({ cancelled: true, error: null });
   }
 
   private handleAsrEvent(event: AsrWorkerEvent): void {
@@ -105,11 +106,16 @@ export class DictationSession {
         this.options.emit({ type: "partial", segment: event.segment, text: event.text });
         return;
       case "segment":
-        this.enqueueCorrection(event.segment, event.text);
+        this.segmentTexts.push(event.text);
+        this.options.emit({ type: "segment", segment: event.segment, text: event.text });
         return;
       case "end":
         this.asrEnded = true;
-        void this.correctionQueue.then(() => this.finish({ cancelled: event.cancelled ?? false, error: null }));
+        if (event.cancelled) {
+          this.finishUncorrected({ cancelled: true, error: null });
+          return;
+        }
+        void this.correctAndFinish();
         return;
       case "error":
         this.fail("asr_failed", event.message);
@@ -119,47 +125,37 @@ export class DictationSession {
     }
   }
 
-  private enqueueCorrection(segment: number, raw: string): void {
-    this.correctionQueue = this.correctionQueue.then(async () => {
-      if (this.finished) {
-        return;
-      }
-      const text = await this.correctSegment(raw);
-      if (this.finished) {
-        return;
-      }
-      this.segments.push({ raw, text: text.text });
-      this.options.emit({ type: "segment", segment, raw, text: text.text, corrected: text.corrected });
-    });
+  private async correctAndFinish(): Promise<void> {
+    const correction = await this.correctWholeText(this.rawText());
+    // 清書を待っている間に取り消された
+    if (this.finished) {
+      return;
+    }
+    this.finish({ cancelled: false, ...correction });
   }
 
-  private async correctSegment(raw: string): Promise<{ text: string; corrected: boolean }> {
-    if (!raw.trim()) {
-      return { text: "", corrected: false };
+  private async correctWholeText(rawText: string): Promise<WholeTextCorrection> {
+    if (!rawText.trim()) {
+      return { text: rawText, corrected: false, error: null };
     }
     try {
       const result = await this.options.corrector.correct(
-        {
-          text: raw,
-          previousText: this.segments.map((segment) => segment.text).join(""),
-          terms: this.options.terms,
-          instructions: this.options.instructions,
-        },
+        { text: rawText, terms: this.options.terms, instructions: this.options.instructions },
         this.abortController.signal,
       );
       this.inputTokens += result.inputTokens;
       this.outputTokens += result.outputTokens;
       if (result.corrected) {
-        this.maxCorrectionMs = Math.max(this.maxCorrectionMs ?? 0, result.elapsedMs);
+        this.correctionMs = result.elapsedMs;
       }
-      return { text: result.text, corrected: result.corrected };
+      return { text: result.text, corrected: result.corrected, error: null };
     } catch (error) {
-      if (this.abortController.signal.aborted) {
-        return { text: raw, corrected: false };
-      }
-      this.correctionError = error instanceof Error ? error.message : String(error);
-      return { text: raw, corrected: false };
+      return { text: rawText, corrected: false, error: error instanceof Error ? error.message : String(error) };
     }
+  }
+
+  private rawText(): string {
+    return this.segmentTexts.join("");
   }
 
   private fail(code: "asr_failed", message: string): void {
@@ -169,28 +165,32 @@ export class DictationSession {
     this.options.emit({ type: "error", code, message });
     this.abortController.abort();
     this.asrStream?.close();
-    this.finish({ cancelled: false, error: message });
+    this.finishUncorrected({ cancelled: false, error: message });
   }
 
-  private finish(input: { cancelled: boolean; error: string | null }): void {
+  /** 清書せずに終える（取り消し・失敗）。端末は入れた文字起こしの結果をそのまま残す。 */
+  private finishUncorrected(input: { cancelled: boolean; error: string | null }): void {
+    this.finish({ cancelled: input.cancelled, text: this.rawText(), corrected: false, error: input.error });
+  }
+
+  private finish(input: { cancelled: boolean } & WholeTextCorrection): void {
     if (this.finished) {
       return;
     }
     this.finished = true;
-    const correctedText = this.segments.map((segment) => segment.text).join("");
-    this.options.emit({ type: "end", text: correctedText, cancelled: input.cancelled });
+    this.options.emit({ type: "end", text: input.text, corrected: input.corrected, cancelled: input.cancelled });
     this.asrStream?.close();
     this.options.onFinished({
       endedAt: new Date(),
       audioMs: Math.round(this.receivedAudioBytes / PCM16_BYTES_PER_MS),
-      segmentCount: this.segments.length,
-      rawText: this.segments.map((segment) => segment.raw).join(""),
-      correctedText,
+      segmentCount: this.segmentTexts.length,
+      rawText: this.rawText(),
+      correctedText: input.text,
       correctionModel: this.options.corrector.model,
       inputTokens: this.inputTokens,
       outputTokens: this.outputTokens,
-      maxCorrectionMs: this.maxCorrectionMs,
-      error: input.error ?? this.correctionError,
+      correctionMs: this.correctionMs,
+      error: input.error,
     });
   }
 }

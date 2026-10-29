@@ -6,6 +6,8 @@ namespace Kikitori.Windows.Input;
 
 /// <summary>
 /// 文字を、いま前面にあるアプリへキー入力（SendInput の KEYEVENTF_UNICODE）として送る。
+/// 打った文を Backspace で消して打ち直すことはしない（Windows 11 のメモ帳は Backspace を取りこぼし、
+/// 直後の文字と順番が入れ替わる。clients/windows/tools/replacement-experiment.ps1）。
 /// IME がオンだと文字が IME に取り込まれるので、呼ぶ側は先に ImeSuspension で IME をオフにしておく。
 /// 管理者として動くアプリへは、Windows が送らせない（UIPI）。
 /// </summary>

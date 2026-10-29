@@ -11,7 +11,7 @@ import { Cell, DataTable } from "../ui/DataTable.tsx";
 import { ErrorNotice } from "../ui/Feedback.tsx";
 import { CheckboxField } from "../ui/Field.tsx";
 
-/** ブラウザーのマイクで音声入力を試す。端末と同じ流れ（文字起こし → 区切りごとの清書）。 */
+/** ブラウザーのマイクで音声入力を試す。端末と同じ流れ（文字起こしを流す → 話し終えたら全文を清書して置き換える）。 */
 export function PlaygroundPage() {
   const { text } = useText();
   const session = usePlaygroundSession();
@@ -19,7 +19,9 @@ export function PlaygroundPage() {
   const [correction, setCorrection] = useState(true);
   const [startError, setStartError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const transcript = session.segments.map((segment) => segment.text).join("");
+  const rawTranscript = session.segments.map((segment) => segment.text).join("");
+  // 端末と同じく、話している間は文字起こしの結果を出し、話し終えたら清書した全文で置き換える
+  const transcript = session.result ? session.result.text : rawTranscript;
   const microphoneAvailable = window.isSecureContext && Boolean(navigator.mediaDevices?.getUserMedia);
   const statusLabel: Record<PlaygroundState, string> = {
     idle: text.playgroundIdle,
@@ -108,18 +110,32 @@ export function PlaygroundPage() {
         )}
       </div>
 
+      {session.result && (
+        <>
+          <h2 className="mb-2 text-[16px] font-semibold">{text.playgroundComparison}</h2>
+          <DataTable headers={[text.historyRaw, text.playgroundCorrected, text.playgroundCorrectionTime]}>
+            <tr className="align-top">
+              <Cell className="min-w-[220px] text-fg-muted">{rawTranscript}</Cell>
+              <Cell className="min-w-[220px]">
+                {session.result.text}
+                {!session.result.corrected && <span className="ml-2 text-[12px] text-fg-faint">{text.playgroundNotCorrected}</span>}
+              </Cell>
+              <Cell className="whitespace-nowrap font-mono text-[12.5px] tabular-nums text-fg-secondary">
+                {(session.result.arrivedAfterStopMs / 1000).toFixed(1)} s
+              </Cell>
+            </tr>
+          </DataTable>
+        </>
+      )}
+
       {session.segments.length > 0 && (
         <>
-          <h2 className="mb-2 text-[16px] font-semibold">{text.playgroundSegments}</h2>
-          <DataTable headers={["#", text.historyRaw, text.playgroundCorrected, text.playgroundArrived]}>
+          <h2 className="mb-2 mt-8 text-[16px] font-semibold">{text.playgroundSegments}</h2>
+          <DataTable headers={["#", text.historyRaw, text.playgroundArrived]}>
             {session.segments.map((segment) => (
               <tr key={segment.index} className="align-top">
                 <Cell className="font-mono text-[12.5px] text-fg-faint">{segment.index + 1}</Cell>
-                <Cell className="min-w-[220px] text-fg-muted">{segment.raw}</Cell>
-                <Cell className="min-w-[220px]">
-                  {segment.text}
-                  {!segment.corrected && <span className="ml-2 text-[12px] text-fg-faint">{text.playgroundNotCorrected}</span>}
-                </Cell>
+                <Cell className="min-w-[220px] text-fg-muted">{segment.text}</Cell>
                 <Cell className="whitespace-nowrap font-mono text-[12.5px] tabular-nums text-fg-secondary">
                   {(segment.arrivedAfterMs / 1000).toFixed(1)} s
                 </Cell>

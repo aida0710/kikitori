@@ -14,8 +14,8 @@ import java.util.concurrent.TimeUnit
 sealed interface DictationEvent {
     data class Ready(val dictationId: Long) : DictationEvent
     data class Partial(val segment: Int, val text: String) : DictationEvent
-    data class Segment(val segment: Int, val raw: String, val text: String, val corrected: Boolean) : DictationEvent
-    data class End(val text: String, val cancelled: Boolean) : DictationEvent
+    data class Segment(val segment: Int, val text: String) : DictationEvent
+    data class End(val text: String, val corrected: Boolean, val cancelled: Boolean) : DictationEvent
     data class Error(val code: String, val message: String) : DictationEvent
     data class Failed(val cause: Throwable) : DictationEvent
 }
@@ -72,10 +72,8 @@ class DictationConnection(
         return when (json.optString("type")) {
             "ready" -> DictationEvent.Ready(json.getLong("dictationId"))
             "partial" -> DictationEvent.Partial(json.getInt("segment"), json.getString("text"))
-            "segment" -> DictationEvent.Segment(
-                json.getInt("segment"), json.getString("raw"), json.getString("text"), json.getBoolean("corrected"),
-            )
-            "end" -> DictationEvent.End(json.getString("text"), json.getBoolean("cancelled"))
+            "segment" -> DictationEvent.Segment(json.getInt("segment"), json.getString("text"))
+            "end" -> DictationEvent.End(json.getString("text"), json.getBoolean("corrected"), json.getBoolean("cancelled"))
             "error" -> DictationEvent.Error(json.getString("code"), json.getString("message"))
             else -> null
         }

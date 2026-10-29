@@ -89,6 +89,14 @@ public partial class DictationWindow : Window
         RenderTranscript();
     }
 
+    /// <summary>話し終えたあと、区切りで出した文を清書した全文に置き換える。</summary>
+    public void ShowFinalText(string text)
+    {
+        committedText = text;
+        partialText = "";
+        RenderTranscript();
+    }
+
     public void ShowFinished(string status)
     {
         SetStatus(status, listening: false);

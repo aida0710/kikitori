@@ -5,16 +5,17 @@ import { z } from "zod";
 import type { CorrectionModel, ServerSettings } from "@kikitori/protocol";
 import { buildCorrectionUserMessage, CORRECTION_SYSTEM_PROMPT } from "./correctionPrompt.ts";
 import { isFillerOnly } from "./fillerWords.ts";
+import { removeSpacesAroundLatin } from "./japaneseSpacing.ts";
 import type { CorrectionRequest, CorrectionResult, TextCorrector } from "./textCorrector.ts";
 
-// 清書した文は元の文とほぼ同じ長さ。区切りは最大 30 秒ほどなので、これで足りる
-const MAX_OUTPUT_TOKENS = 2048;
+// 清書した文は元の文とほぼ同じ長さ。日本語は 1 トークンが 1〜1.5 文字ほどなので、10 分ほど話した全文（約 3000 文字）まで収まる
+const MAX_OUTPUT_TOKENS = 4096;
 // 清書は言葉を足さないので、元の文より長くなるのは句読点と、<terms> の英字の表記への置き換えの分だけ。
 // これを超えたら、清書の文ではなく説明を返したとみなして使わない（迷ったときに考えを本文に書くことがあった）
 const MAX_LENGTH_RATIO = 1.5;
 const MAX_LENGTH_MARGIN_CHARS = 10;
 // 指示の中の印。清書の文に出てきたら、指示を写したとみなして使わない
-const PROMPT_TAG_PATTERN = /<\/?(current|previous|terms|user_instructions)>/;
+const PROMPT_TAG_PATTERN = /<\/?(transcript|terms|user_instructions)>/;
 
 // 返す形を決めて、清書の文の外に説明や前置きを書けないようにする
 const correctionOutputSchema = z.object({ text: z.string() });
@@ -70,7 +71,7 @@ export class ClaudeCorrector implements TextCorrector {
     if (message.stop_reason !== "end_turn" || !message.parsed_output) {
       return { text: request.text, corrected: false, elapsedMs, ...usage };
     }
-    const text = message.parsed_output.text.replace(/\r?\n/g, "").trim();
+    const text = removeSpacesAroundLatin(message.parsed_output.text.replace(/\r?\n/g, "").trim());
     assertLooksLikeCorrection({ original: request.text, corrected: text });
     return { text, corrected: true, elapsedMs, ...usage };
   }

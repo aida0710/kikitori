@@ -4,12 +4,13 @@ import Foundation
 import KikitoriCore
 
 /// 音声入力の状態（待機 → 聞いている → 清書を待つ → 待機）を進める。Windows 版の DictationController と同じ流れ。
-/// 確定した区切りが届くたびに、その文を前面のアプリへ打ち込む。打ち込んだ文字は消さない。どれも主の糸で動かす。
+/// 話している間は、文字起こしの結果を小窓にだけ出す。話し終えたら、清書した全文を前面のアプリへ一度に打つ
+/// （取り消したときは打たない）。打った文を消して直すと崩れるアプリがあるので、打つのは 1 回だけにする。どれも主の糸で動かす。
 final class DictationController {
     private enum State { case idle, listening, finishing }
 
     private static let autoStopCheckInterval: TimeInterval = 1
-    // 最後の区切りを打ってから入力ソースを戻すまでの間。打った文字をアプリが受け取り終えるのを待つ
+    // 清書した全文を打ってから入力ソースを戻すまでの間。打った文字をアプリが受け取り終えるのを待つ
     // （終わったことを知る手段が無いので時間で待つ。小窓が消えるのと同じ頃）
     private static let inputSourceResumeDelay: TimeInterval = 1
 
@@ -94,7 +95,7 @@ final class DictationController {
             fail(current, UiText.microphoneFailed, error)
             return
         }
-        // 最初の区切りは話し始めてから 0.6 秒以上あとに届くので、録音を始めてから入力ソースを切り替えても間に合う
+        // 打つのは話し終えたあとなので、録音を始めてから入力ソースを切り替えても間に合う
         inputSourceSuspension = InputSourceSuspension.suspendIfNeeded(log: log)
         current.start(correction: settings.correction)
         autoStopTimer = Timer.scheduledTimer(withTimeInterval: Self.autoStopCheckInterval, repeats: true) { [weak self] _ in
@@ -136,16 +137,19 @@ final class DictationController {
         case .partial(let segment, let text):
             lastActivity = Date()
             panel.showPartial(segment: segment, text: text)
-        case .segment(let segment, _, let text, let corrected):
+        case .segment(let segment, let text):
             lastActivity = Date()
-            log("segment \(segment) corrected=\(corrected) text=\(text)")
-            TextTyper.type(text)
+            log("segment \(segment) text=\(text)")
             panel.showCommitted(segment: segment, text: text)
         case .error(let code, let message):
             log("error \(code): \(message)")
             panel.showError(message)
-        case .end(_, let cancelled):
-            log("end cancelled=\(cancelled)")
+        case .end(let text, let corrected, let cancelled):
+            log("end cancelled=\(cancelled) corrected=\(corrected) text=\(text)")
+            if !cancelled {
+                panel.showFinalText(text)
+                TextTyper.type(text)
+            }
             finish(source, status: cancelled ? UiText.cancelled : UiText.done)
         }
     }

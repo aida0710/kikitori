@@ -85,10 +85,10 @@ async function waitFor(condition: () => boolean) {
 }
 
 describe("DictationSession", () => {
-  it("清書に時間がかかっても、区切りは話した順に届き、前の清書を文脈として渡す", async () => {
+  it("区切りは文字起こしの結果のまま届いた順に返し、話し終えたら全文を 1 回で清書して end で返す", async () => {
     const asr = new FakeAsrWorker();
-    const corrector = new DelayedCorrector([40, 0]);
-    const { session, events } = createSession(asr, corrector);
+    const corrector = new DelayedCorrector([20]);
+    const { session, events, outcome } = createSession(asr, corrector);
     await session.start();
 
     asr.emitSegment(0, "一つ目");
@@ -96,13 +96,16 @@ describe("DictationSession", () => {
     asr.emitEnd(2);
     await waitFor(() => events.some((event) => event.type === "end"));
 
-    const segments = events.filter((event) => event.type === "segment");
-    expect(segments.map((event) => event.text)).toEqual(["「一つ目」", "「二つ目」"]);
-    expect(corrector.requests[1]?.previousText).toBe("「一つ目」");
-    expect(events.at(-1)).toEqual({ type: "end", text: "「一つ目」「二つ目」", cancelled: false });
+    expect(events.filter((event) => event.type === "segment")).toEqual([
+      { type: "segment", segment: 0, text: "一つ目" },
+      { type: "segment", segment: 1, text: "二つ目" },
+    ]);
+    expect(corrector.requests.map((request) => request.text)).toEqual(["一つ目二つ目"]);
+    expect(events.at(-1)).toEqual({ type: "end", text: "「一つ目二つ目」", corrected: true, cancelled: false });
+    expect(outcome()).toMatchObject({ rawText: "一つ目二つ目", correctedText: "「一つ目二つ目」", segmentCount: 2, error: null });
   });
 
-  it("清書に失敗した区切りは、文字起こしの結果をそのまま返して続ける", async () => {
+  it("清書に失敗したら、文字起こしの全文を end で返し、理由を履歴に残す", async () => {
     const asr = new FakeAsrWorker();
     const corrector = new DelayedCorrector([]);
     corrector.failOnText = "失敗する文";
@@ -110,15 +113,10 @@ describe("DictationSession", () => {
     await session.start();
 
     asr.emitSegment(0, "失敗する文");
-    asr.emitSegment(1, "次の文");
-    asr.emitEnd(2);
+    asr.emitEnd(1);
     await waitFor(() => outcome() !== null);
 
-    const segments = events.filter((event) => event.type === "segment");
-    expect(segments.map((event) => [event.text, event.corrected])).toEqual([
-      ["失敗する文", false],
-      ["「次の文」", true],
-    ]);
+    expect(events.at(-1)).toEqual({ type: "end", text: "失敗する文", corrected: false, cancelled: false });
     expect(outcome()?.error).toBe("correction failed");
   });
 
@@ -134,25 +132,28 @@ describe("DictationSession", () => {
     expect(asr.context).toBe("kikitori Qwen");
   });
 
-  it("文字起こしが end の前に切れたら、端末にエラーと end を送る", async () => {
+  it("文字起こしが end の前に切れたら、端末にエラーと、それまでの文字起こしの end を送る", async () => {
     const asr = new FakeAsrWorker();
     const { session, events } = createSession(asr, new DelayedCorrector([]));
     await session.start();
 
+    asr.emitSegment(0, "途中まで");
     asr.handlers!.onClosed("gone");
 
-    expect(events.map((event) => event.type)).toEqual(["error", "end"]);
+    expect(events.map((event) => event.type)).toEqual(["segment", "error", "end"]);
+    expect(events.at(-1)).toEqual({ type: "end", text: "途中まで", corrected: false, cancelled: false });
   });
 
-  it("取り消すと、清書を待たずに end（cancelled）を送る", async () => {
+  it("清書を待っている間に取り消すと、清書を待たずに end（cancelled）を送る", async () => {
     const asr = new FakeAsrWorker();
     const { session, events } = createSession(asr, new DelayedCorrector([1000]));
     await session.start();
 
     asr.emitSegment(0, "長い清書");
+    asr.emitEnd(1);
     session.cancel();
 
-    expect(events.at(-1)).toEqual({ type: "end", text: "", cancelled: true });
+    expect(events.at(-1)).toEqual({ type: "end", text: "長い清書", corrected: false, cancelled: true });
   });
 });
 

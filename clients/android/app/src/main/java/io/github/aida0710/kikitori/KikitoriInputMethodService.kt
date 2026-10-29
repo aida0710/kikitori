@@ -22,7 +22,7 @@ import io.github.aida0710.kikitori.settings.ClientSettings
 
 /**
  * 音声入力だけのキーボード。Gboard などから切り替えて呼ぶと、すぐに聞き始める。
- * 話している区切りは入力欄に未確定の文字として出し、確定した区切りが届いたら清書した文で確定する。
+ * 話している間は、文字起こしの結果を入力欄に未確定の文字として出し、話し終えたら清書した全文で置き換えて確定する。
  * 話し終えたら、元のキーボードへ自動で戻る。
  */
 class KikitoriInputMethodService : InputMethodService(), DictationView {
@@ -31,10 +31,12 @@ class KikitoriInputMethodService : InputMethodService(), DictationView {
     private var transcriptText: TextView? = null
     private var levelRing: View? = null
     private var microphoneButton: ImageButton? = null
-    private var committedText = ""
+    // 確定した区切りの文字起こしの結果。話し終えるまでは、これと途中結果を入力欄の未確定の文字にしておく
+    private var segmentText = ""
     private var partialText = ""
-    // 清書を待っている区切りより先に、次の区切りの途中結果が届くことがある。どの区切りの途中結果かを持つ
+    // 確定した区切りより前の途中結果が遅れて届いても使わないよう、どの区切りの途中結果かを持つ
     private var partialSegment = -1
+    private var lastSegment = -1
 
     override fun onCreate() {
         super.onCreate()
@@ -82,9 +84,10 @@ class KikitoriInputMethodService : InputMethodService(), DictationView {
     }
 
     private fun startDictation() {
-        committedText = ""
+        segmentText = ""
         partialText = ""
         partialSegment = -1
+        lastSegment = -1
         renderTranscript()
         val settings = ClientSettings.load(this)
         val accessKey = AccessKeyStore.read(this)
@@ -129,27 +132,20 @@ class KikitoriInputMethodService : InputMethodService(), DictationView {
     }
 
     override fun showPartial(segment: Int, text: String) {
+        if (segment <= lastSegment) return
         partialSegment = segment
         partialText = text
-        currentInputConnection?.setComposingText(text, 1)
+        currentInputConnection?.setComposingText(segmentText + partialText, 1)
         renderTranscript()
     }
 
-    override fun commitSegment(segment: Int, text: String) {
-        val connection = currentInputConnection
-        if (partialSegment > segment) {
-            // 未確定の文字は後の区切りのもの。それを一度外して確定した文を入れ、後ろに付け直す
-            connection?.beginBatchEdit()
-            connection?.setComposingText("", 1)
-            connection?.commitText(text, 1)
-            connection?.setComposingText(partialText, 1)
-            connection?.endBatchEdit()
-        } else {
-            // 未確定の文字（この区切りの途中結果）を、清書した文で置き換えて確定する
-            connection?.commitText(text, 1)
+    override fun showSegment(segment: Int, text: String) {
+        segmentText += text
+        lastSegment = segment
+        if (partialSegment <= segment) {
             partialText = ""
         }
-        committedText += text
+        currentInputConnection?.setComposingText(segmentText + partialText, 1)
         renderTranscript()
     }
 
@@ -157,13 +153,19 @@ class KikitoriInputMethodService : InputMethodService(), DictationView {
         setStatus(message, listening = false)
     }
 
-    override fun finished(reason: FinishReason) {
+    override fun finished(reason: FinishReason, finalText: String?) {
         currentInputConnection?.let { connection ->
-            if (partialText.isNotEmpty()) {
-                // 確定しなかった途中結果は入力欄に残さない
-                connection.setComposingText("", 1)
+            if (finalText != null) {
+                // 未確定の文字（文字起こしの結果）を、清書した全文で置き換えて確定する
+                connection.commitText(finalText, 1)
+            } else {
+                // 取り消し・失敗のときは、確定した区切りの文字起こしの結果を残し、途中結果は残さない
+                connection.setComposingText(segmentText, 1)
+                connection.finishComposingText()
             }
-            connection.finishComposingText()
+        }
+        if (finalText != null) {
+            segmentText = finalText
         }
         partialText = ""
         renderTranscript()
@@ -190,8 +192,8 @@ class KikitoriInputMethodService : InputMethodService(), DictationView {
     }
 
     private fun renderTranscript() {
-        val committedShown = committedText.takeLast(maxOf(0, TRANSCRIPT_TAIL_CHARACTERS - partialText.length))
-        val transcript = SpannableStringBuilder(committedShown)
+        val segmentShown = segmentText.takeLast(maxOf(0, TRANSCRIPT_TAIL_CHARACTERS - partialText.length))
+        val transcript = SpannableStringBuilder(segmentShown)
         val start = transcript.length
         transcript.append(partialText.takeLast(TRANSCRIPT_TAIL_CHARACTERS))
         transcript.setSpan(
