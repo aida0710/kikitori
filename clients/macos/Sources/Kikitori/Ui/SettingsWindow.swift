@@ -10,10 +10,13 @@ final class SettingsWindowController: NSWindowController {
         window.title = UiText.settingsTitle
         window.isReleasedWhenClosed = false
         super.init(window: window)
-        window.contentView = NSHostingView(rootView: SettingsForm(initial: ClientSettings.load()) { [weak self] saved in
+        let form = NSHostingView(rootView: SettingsForm(initial: ClientSettings.load()) { [weak self] saved in
             onSaved(saved)
             self?.close()
         })
+        window.contentView = form
+        // 窓の高さを中身に合わせる（決め打ちの高さだと、下に空きが出る）
+        window.setContentSize(form.fittingSize)
         window.center()
     }
 
