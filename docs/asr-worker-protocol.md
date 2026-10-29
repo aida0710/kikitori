@@ -9,8 +9,8 @@
 
 1. APIサーバーが`{"type":"start","context":"登録した言葉 …"}`を送る。`context`はQwen3-ASRの文脈の文で、固有名詞の表記を寄せるのに使う。
 2. `{"type":"ready","model":"…"}`が届く。
-3.音声（16kHz・モノラル・16bitのPCM）をバイナリで送る。
-4.話し終えたら`{"type":"stop"}`。取り消すなら`{"type":"cancel"}`。
+3. 音声（16kHz・モノラル・16bitのPCM）をバイナリで送る。
+4. 話し終えたら`{"type":"stop"}`。取り消すなら`{"type":"cancel"}`。
 
 届くもの:
 
