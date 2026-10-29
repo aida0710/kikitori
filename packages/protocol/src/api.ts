@@ -49,6 +49,22 @@ export const serverSettingsSchema = z.object({
 });
 export type ServerSettings = z.infer<typeof serverSettingsSchema>;
 
+/** 清書に使う Claude の API キーがどこから来ているか。キーそのものは返さない（末尾 4 文字だけ）。 */
+export const anthropicApiKeyStatusSchema = z.object({
+  // dashboard: 管理画面で入れたもの。server-file: サーバーの起動の設定（ANTHROPIC_API_KEY・ANTHROPIC_API_KEY_FILE）
+  source: z.enum(["dashboard", "server-file"]).nullable(),
+  hint: z.string().nullable(),
+});
+export type AnthropicApiKeyStatus = z.infer<typeof anthropicApiKeyStatusSchema>;
+
+export const setAnthropicApiKeyRequestSchema = z.object({ apiKey: z.string().trim().min(1).max(512) });
+
+/** API キーを保存できなかったときの code。画面はこれを見て、画面の言語の文を出す。 */
+export const ANTHROPIC_API_KEY_ERROR_CODES = {
+  rejected: "api_key_rejected",
+  unreachable: "anthropic_unreachable",
+} as const;
+
 export const userSettingsSchema = z.object({
   // 添削で使う言葉（人名・製品名など）。1 行に 1 つ
   terms: z.string().max(20000),

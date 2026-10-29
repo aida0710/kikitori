@@ -44,6 +44,13 @@ CREATE TABLE IF NOT EXISTS server_settings (
   correction_effort TEXT NOT NULL
 );
 
+-- 管理画面で入れた鍵（清書に使う Claude の API キーなど）
+CREATE TABLE IF NOT EXISTS server_secrets (
+  name TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS dictations (
   id INTEGER PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,

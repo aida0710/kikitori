@@ -8,6 +8,8 @@ import {
   loginRequestSchema,
   serverSettingsSchema,
   type ServerStatus,
+  setAnthropicApiKeyRequestSchema,
+  ANTHROPIC_API_KEY_ERROR_CODES,
   updateUserRequestSchema,
   userSettingsSchema,
 } from "@kikitori/protocol";
@@ -72,7 +74,7 @@ export function createApiRoutes(services: ServerServices): Hono<AppEnv> {
   api.get("/status", async (c) => {
     const status: ServerStatus = {
       asr: await services.asrWorker.checkHealth(),
-      correction: { configured: services.correctionConfigured },
+      correction: { configured: services.anthropicApiKeyStatus().source !== null },
       httpsUrl: services.httpsUrl,
     };
     return c.json(status);
@@ -129,6 +131,28 @@ export function createApiRoutes(services: ServerServices): Hono<AppEnv> {
     if (!body.ok) return body.response;
     services.settings.saveServerSettings(body.value);
     return c.json(body.value);
+  });
+
+  api.get("/settings/server/anthropic-api-key", requireAdmin, (c) => c.json(services.anthropicApiKeyStatus()));
+
+  api.put("/settings/server/anthropic-api-key", requireAdmin, async (c) => {
+    const body = await parseJsonBody(c, setAnthropicApiKeyRequestSchema);
+    if (!body.ok) return body.response;
+    // 使えないキーを保存すると、清書が黙って止まるので、保存する前に Anthropic に確かめる
+    const check = await services.checkAnthropicApiKey(body.value.apiKey);
+    if (check === "rejected") {
+      return errorResponse(c, 400, ANTHROPIC_API_KEY_ERROR_CODES.rejected, "Anthropic rejected this API key");
+    }
+    if (check === "unreachable") {
+      return errorResponse(c, 503, ANTHROPIC_API_KEY_ERROR_CODES.unreachable, "Could not reach Anthropic to check the API key");
+    }
+    services.settings.saveAnthropicApiKey(body.value.apiKey);
+    return c.json(services.anthropicApiKeyStatus());
+  });
+
+  api.delete("/settings/server/anthropic-api-key", requireAdmin, (c) => {
+    services.settings.deleteAnthropicApiKey();
+    return c.json(services.anthropicApiKeyStatus());
   });
 
   api.get("/users", requireAdmin, (c) => c.json(services.users.list().map(toUser)));

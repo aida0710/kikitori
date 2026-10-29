@@ -2,6 +2,7 @@
 import { isApiError, jsonRequestInit, NETWORK_ERROR_CODE, requestJson } from "../lib/http.ts";
 import {
   accessKeySchema,
+  anthropicApiKeyStatusSchema,
   createdAccessKeySchema,
   dictationSchema,
   serverSettingsSchema,
@@ -50,6 +51,19 @@ export const kikitoriApi = {
     requestJson("/api/settings/server", { schema: serverSettingsSchema, init: { signal } }),
   saveServerSettings: (settings: ServerSettings) =>
     requestJson("/api/settings/server", { schema: serverSettingsSchema, init: jsonRequestInit("PUT", settings) }),
+
+  anthropicApiKey: (signal?: AbortSignal) =>
+    requestJson("/api/settings/server/anthropic-api-key", { schema: anthropicApiKeyStatusSchema, init: { signal } }),
+  saveAnthropicApiKey: (apiKey: string) =>
+    requestJson("/api/settings/server/anthropic-api-key", {
+      schema: anthropicApiKeyStatusSchema,
+      init: jsonRequestInit("PUT", { apiKey }),
+    }),
+  deleteAnthropicApiKey: () =>
+    requestJson("/api/settings/server/anthropic-api-key", {
+      schema: anthropicApiKeyStatusSchema,
+      init: jsonRequestInit("DELETE"),
+    }),
 
   users: (signal?: AbortSignal) => requestJson("/api/users", { schema: z.array(userSchema), init: { signal } }),
   createUser: (input: { username: string; password: string; role: UserRole }) =>

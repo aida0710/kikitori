@@ -30,6 +30,7 @@ beforeEach(async () => {
     database,
     config: { ...readServerConfig({}), anthropicApiKey: null },
     correctorFor: () => new PassthroughCorrector(),
+    checkAnthropicApiKey: async (apiKey) => (apiKey === "sk-ant-valid-key" ? "valid" : "rejected"),
   });
   services.users.create({ username: "admin", role: "admin", passwordHash: await hashPassword("admin-password") });
   app = createApp({ services, webDirectory: null });
@@ -115,5 +116,35 @@ describe("REST API", () => {
     expect(saved.status).toBe(200);
     const loaded = await app.request("/api/settings/me", { headers: { cookie } });
     expect(await loaded.json()).toEqual(settings);
+  });
+
+  it("ClaudeのAPIキーは、Anthropicが受け付けたものだけ保存し、末尾4文字だけを返す", async () => {
+    const cookie = await login("admin", "admin-password");
+    const rejected = await app.request("/api/settings/server/anthropic-api-key", jsonRequest("PUT", { apiKey: "sk-ant-wrong" }, cookie));
+    expect(rejected.status).toBe(400);
+    expect(services.settings.getAnthropicApiKey()).toBeNull();
+
+    const saved = await app.request("/api/settings/server/anthropic-api-key", jsonRequest("PUT", { apiKey: "sk-ant-valid-key" }, cookie));
+    expect(await saved.json()).toEqual({ source: "dashboard", hint: "-key" });
+    const status = await app.request("/api/status", { headers: { cookie } });
+    expect(((await status.json()) as { correction: { configured: boolean } }).correction.configured).toBe(true);
+
+    const removed = await app.request("/api/settings/server/anthropic-api-key", { method: "DELETE", headers: { cookie } });
+    expect(await removed.json()).toEqual({ source: null, hint: null });
+  });
+
+  it("一般の利用者はClaudeのAPIキーを見ることも変えることもできない", async () => {
+    const adminCookie = await login("admin", "admin-password");
+    await app.request(
+      "/api/users",
+      jsonRequest("POST", { username: "member", password: "member-password", role: "member" }, adminCookie),
+    );
+    const memberCookie = await login("member", "member-password");
+    expect((await app.request("/api/settings/server/anthropic-api-key", { headers: { cookie: memberCookie } })).status).toBe(403);
+    const changed = await app.request(
+      "/api/settings/server/anthropic-api-key",
+      jsonRequest("PUT", { apiKey: "sk-ant-valid-key" }, memberCookie),
+    );
+    expect(changed.status).toBe(403);
   });
 });

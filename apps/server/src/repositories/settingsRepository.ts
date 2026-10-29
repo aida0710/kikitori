@@ -11,6 +11,8 @@ const DEFAULT_SERVER_SETTINGS: ServerSettings = {
 
 const DEFAULT_USER_SETTINGS: UserSettings = { terms: "", instructions: "", saveHistory: true };
 
+const ANTHROPIC_API_KEY_SECRET = "anthropic_api_key";
+
 export class SettingsRepository {
   private readonly database: DatabaseSync;
 
@@ -61,5 +63,26 @@ export class SettingsRepository {
            instructions = excluded.instructions, save_history = excluded.save_history`,
       )
       .run(userId, settings.terms, settings.instructions, settings.saveHistory ? 1 : 0);
+  }
+
+  /** 管理画面で入れた Claude の API キー。無ければ null。 */
+  getAnthropicApiKey(): string | null {
+    const row = this.database.prepare("SELECT value FROM server_secrets WHERE name = ?").get(ANTHROPIC_API_KEY_SECRET) as
+      | { value: string }
+      | undefined;
+    return row?.value ?? null;
+  }
+
+  saveAnthropicApiKey(apiKey: string): void {
+    this.database
+      .prepare(
+        `INSERT INTO server_secrets (name, value, updated_at) VALUES (?, ?, ?)
+         ON CONFLICT (name) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+      )
+      .run(ANTHROPIC_API_KEY_SECRET, apiKey, new Date().toISOString());
+  }
+
+  deleteAnthropicApiKey(): void {
+    this.database.prepare("DELETE FROM server_secrets WHERE name = ?").run(ANTHROPIC_API_KEY_SECRET);
   }
 }
