@@ -155,3 +155,14 @@ describe("DictationSession", () => {
     expect(events.at(-1)).toEqual({ type: "end", text: "", cancelled: true });
   });
 });
+
+describe("isFillerOnly", () => {
+  it("言い淀みだけの区切りは清書に回さない", async () => {
+    const { isFillerOnly } = await import("../src/dictation/fillerWords.ts");
+    expect(isFillerOnly("えー")).toBe(true);
+    expect(isFillerOnly("えーと、あのー。")).toBe(true);
+    expect(isFillerOnly("うーん")).toBe(true);
+    expect(isFillerOnly("えー明日")).toBe(false);
+    expect(isFillerOnly("はい、お願いします")).toBe(false);
+  });
+});

@@ -1,7 +1,8 @@
 /** Claude（Messages API）で区切りの文を清書する。 */
 import Anthropic from "@anthropic-ai/sdk";
 import type { CorrectionModel, ServerSettings } from "@kikitori/protocol";
-import { buildCorrectionUserMessage, CORRECTION_SYSTEM_PROMPT } from "./correctionPrompt.ts";
+import { buildCorrectionUserMessage, CORRECTION_SYSTEM_PROMPT, EMPTY_SEGMENT_MARK } from "./correctionPrompt.ts";
+import { isFillerOnly } from "./fillerWords.ts";
 import type { CorrectionRequest, CorrectionResult, TextCorrector } from "./textCorrector.ts";
 
 // 清書した文は元の文とほぼ同じ長さ。区切りは最大 30 秒ほどなので、これで足りる
@@ -36,6 +37,9 @@ export class ClaudeCorrector implements TextCorrector {
   }
 
   async correct(request: CorrectionRequest, signal: AbortSignal): Promise<CorrectionResult> {
+    if (isFillerOnly(request.text)) {
+      return { text: "", corrected: true, inputTokens: 0, outputTokens: 0, elapsedMs: 0 };
+    }
     const started = performance.now();
     const thinking = thinkingFor(this.settings.correctionModel);
     const message = await this.client.messages.create(
@@ -61,6 +65,6 @@ export class ClaudeCorrector implements TextCorrector {
       .join("")
       .replace(/\r?\n/g, "")
       .trim();
-    return { text, corrected: true, elapsedMs, ...usage };
+    return { text: text === EMPTY_SEGMENT_MARK ? "" : text, corrected: true, elapsedMs, ...usage };
   }
 }
