@@ -6,8 +6,8 @@ import KikitoriCore
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let logURL = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Logs/Kikitori/kikitori.log")
-    // 見た目の確認用の見本の小窓を出しておく時間
-    private static let panelDemoSeconds: TimeInterval = 6
+    // 見た目の確認用の見本の小窓・設定画面を出しておく時間（CI で画面を撮るあいだ）
+    private static let demoSeconds: TimeInterval = 6
 
     private let arguments: [String]
     private var statusItem: NSStatusItem?
@@ -24,6 +24,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         if arguments.contains("--show-panel-demo") {
             showPanelDemo()
+            return
+        }
+        if arguments.contains("--show-settings-demo") {
+            openSettings()
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.demoSeconds) { NSApp.terminate(nil) }
             return
         }
         let wavPath = argument(after: "--wav")
@@ -103,7 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.model.level = 0.6
         panel.showCommitted(segment: 0, text: "明日の打ち合わせは十時からに変更します。")
         panel.showPartial(segment: 1, text: "資料は前日までに")
-        DispatchQueue.main.asyncAfter(deadline: .now() + Self.panelDemoSeconds) { NSApp.terminate(nil) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.demoSeconds) { NSApp.terminate(nil) }
     }
 
     private static func log(_ message: String) {

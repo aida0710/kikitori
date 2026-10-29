@@ -16,6 +16,7 @@ app=build/Kikitori.app
 rm -rf build && mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 lipo -create "${binaries[@]}" -output "$app/Contents/MacOS/Kikitori"
 sed "s/__VERSION__/$version/g" Resources/Info.plist > "$app/Contents/Info.plist"
+cp Resources/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 # 署名は自分で作った印（ad-hoc）だけ。初回はシステム設定の「プライバシーとセキュリティ」で「このまま開く」を押すか、
 # xattr -dr com.apple.quarantine Kikitori.app で「ダウンロードしたもの」の印を外してから開く
 codesign --force --sign - "$app"

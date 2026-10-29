@@ -26,11 +26,15 @@ jobs:
       - run: swift --version
       - run: swift test
       - run: tools/build-app.sh "${{ inputs.version || '0.1.0' }}"
-      - name: 小窓の見本を出して画面を撮る
+      - name: 小窓と設定画面の見本を出して画面を撮る
         run: |
           build/Kikitori.app/Contents/MacOS/Kikitori --show-panel-demo &
           sleep 4
           screencapture -x build/panel-demo.png || echo "screencapture failed"
+          wait || true
+          build/Kikitori.app/Contents/MacOS/Kikitori --show-settings-demo &
+          sleep 4
+          screencapture -x build/settings-demo.png || echo "screencapture failed"
           wait || true
       - uses: actions/upload-artifact@v4
         with:
@@ -38,4 +42,5 @@ jobs:
           path: |
             clients/macos/build/Kikitori-macos.zip
             clients/macos/build/panel-demo.png
+            clients/macos/build/settings-demo.png
           if-no-files-found: warn
