@@ -24,7 +24,7 @@ internal static class UiText
     public static string StopTooltip => Pick("止める", "Stop");
     public static string CancelTooltip => Pick("取り消す", "Cancel");
 
-    public static string TrayTooltip => "Kikitori";
+    public static string TrayTooltip(string version) => $"Kikitori {version}";
     public static string TrayStart(string hotkey) => Pick($"音声入力（{hotkey}）", $"Dictate ({hotkey})");
     public static string TraySettings => Pick("設定", "Settings");
     public static string TrayExit => Pick("終了", "Exit");
@@ -36,6 +36,7 @@ internal static class UiText
     public static string HotkeyLabel => Pick("ショートカット（例: Ctrl+Alt+Space）", "Shortcut (e.g. Ctrl+Alt+Space)");
     public static string AutoStopLabel => Pick("声が無いときに自動で止めるまでの秒数", "Seconds of silence before stopping");
     public static string CorrectionLabel => Pick("Claudeで清書する", "Polish with Claude");
+    public static string StartWithWindowsLabel => Pick("Windowsにサインインしたら開く", "Open when you sign in to Windows");
     public static string Save => Pick("保存", "Save");
     public static string TestConnection => Pick("接続を試す", "Test connection");
     public static string ConnectedAs(string username) => Pick($"{username}として接続できました", $"Connected as {username}");

@@ -21,7 +21,11 @@ public partial class App : Application
     private static readonly string LogPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Kikitori", "kikitori.log");
 
+    // 2 つ目に開かれた Kikitori が、動いている Kikitori に設定画面を開いてもらうための合図
+    private const string OpenSettingsSignalName = "Kikitori.Windows.OpenSettings";
+
     private Mutex? singleInstance;
+    private EventWaitHandle? openSettingsSignal;
     private TrayIcon? trayIcon;
     private GlobalHotkey? hotkey;
     private DictationController? controller;
@@ -33,9 +37,18 @@ public partial class App : Application
         singleInstance = new Mutex(initiallyOwned: true, "Kikitori.Windows.SingleInstance", out var isFirst);
         if (!isFirst)
         {
+            // もう一度開かれたら、動いている方に設定画面を出してもらって終わる（何も起きないと、動いているのか分からないため）
+            if (EventWaitHandle.TryOpenExisting(OpenSettingsSignalName, out var signal))
+            {
+                signal.Set();
+                signal.Dispose();
+            }
             Shutdown();
             return;
         }
+        openSettingsSignal = new EventWaitHandle(initialState: false, EventResetMode.AutoReset, OpenSettingsSignalName);
+        ThreadPool.RegisterWaitForSingleObject(
+            openSettingsSignal, (_, _) => Dispatcher.BeginInvoke(OpenSettings), null, Timeout.Infinite, executeOnlyOnce: false);
 
         var arguments = e.Args.ToList();
         var wavIndex = arguments.IndexOf("--wav");
@@ -59,6 +72,12 @@ public partial class App : Application
                 await Task.Delay(TimeSpan.FromSeconds(2));
                 Shutdown();
             });
+        }
+
+        // exe を別の場所へ動かしたあとも、サインインのときに開けるように登録を今の場所で書き直す
+        if (StartupRegistration.IsEnabled())
+        {
+            StartupRegistration.Set(true);
         }
 
         trayIcon = new TrayIcon(settings.Hotkey);

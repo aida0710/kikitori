@@ -18,12 +18,20 @@
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- 1 ファイルの exe を縮める（約 170MB → 約 70MB。起動のときに展開するので、起動が少し遅くなる） -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <ApplicationIcon>Assets\Kikitori.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- WPF と Windows Forms で同じ名前の型（Application など）があるので、Forms は名前を書いて使う -->
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- タスクトレイのアイコンにも、exe と同じアイコン（clients/icons/build_icons.py で作る）を使う -->
+    <Resource Include="Assets\Kikitori.ico" />
   </ItemGroup>
 
   <ItemGroup>

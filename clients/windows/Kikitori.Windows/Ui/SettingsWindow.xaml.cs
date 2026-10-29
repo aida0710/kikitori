@@ -26,6 +26,7 @@ public partial class SettingsWindow : Window
         HotkeyLabel.Text = UiText.HotkeyLabel;
         AutoStopLabel.Text = UiText.AutoStopLabel;
         CorrectionBox.Content = UiText.CorrectionLabel;
+        StartWithWindowsBox.Content = UiText.StartWithWindowsLabel;
         TestButton.Content = UiText.TestConnection;
         SaveButton.Content = UiText.Save;
 
@@ -33,6 +34,8 @@ public partial class SettingsWindow : Window
         HotkeyBox.Text = settings.Hotkey;
         AutoStopBox.Text = settings.AutoStopSeconds.ToString();
         CorrectionBox.IsChecked = settings.Correction;
+        // 初めて設定するとき（サーバーの URL がまだ無いとき）は、常駐のアプリとして開くのを既定にする
+        StartWithWindowsBox.IsChecked = StartupRegistration.IsEnabled() || string.IsNullOrEmpty(settings.ServerUrl);
     }
 
     private ClientSettings ReadForm()
@@ -71,6 +74,7 @@ public partial class SettingsWindow : Window
             return;
         }
         settings.Save();
+        StartupRegistration.Set(StartWithWindowsBox.IsChecked == true);
         if (AccessKeyBox.Password.Length > 0)
         {
             AccessKeyStore.Write(AccessKeyBox.Password.Trim());

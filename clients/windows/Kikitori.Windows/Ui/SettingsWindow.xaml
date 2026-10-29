@@ -22,6 +22,7 @@
         <TextBox x:Name="AutoStopBox" Padding="4" Width="80" HorizontalAlignment="Left" />
 
         <CheckBox x:Name="CorrectionBox" Margin="0,14,0,0" />
+        <CheckBox x:Name="StartWithWindowsBox" Margin="0,8,0,0" />
 
         <TextBlock x:Name="MessageText" Margin="0,14,0,0" TextWrapping="Wrap" />
 
