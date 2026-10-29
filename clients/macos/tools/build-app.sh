@@ -5,11 +5,16 @@ set -euo pipefail
 version=${1:?version}
 here=$(cd "$(dirname "$0")/.." && pwd)
 cd "$here"
-swift build -c release --arch arm64 --arch x86_64
-binary="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/Kikitori"
+# 2 つの向けを一度に組む --arch arm64 --arch x86_64 は、言語の版の設定（swiftLanguageMode）を受け付けないので、
+# 向けごとに組んでから lipo で 1 つにする
+binaries=()
+for triple in arm64-apple-macosx14.0 x86_64-apple-macosx14.0; do
+  swift build -c release --triple "$triple" --scratch-path ".build/$triple"
+  binaries+=("$(swift build -c release --triple "$triple" --scratch-path ".build/$triple" --show-bin-path)/Kikitori")
+done
 app=build/Kikitori.app
 rm -rf build && mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-cp "$binary" "$app/Contents/MacOS/Kikitori"
+lipo -create "${binaries[@]}" -output "$app/Contents/MacOS/Kikitori"
 sed "s/__VERSION__/$version/g" Resources/Info.plist > "$app/Contents/Info.plist"
 # 署名は自分で作った印（ad-hoc）だけ。初回は Finder で右クリック →「開く」で起動する
 codesign --force --sign - "$app"
