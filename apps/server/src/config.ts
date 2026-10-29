@@ -1,5 +1,5 @@
 /** API サーバーの設定。環境変数 KIKITORI_*（Claude の鍵だけは SDK と同じ ANTHROPIC_API_KEY）から読む。 */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 export interface ServerConfig {
   host: string;
@@ -19,8 +19,9 @@ export interface ServerConfig {
 
 function readSecret(env: NodeJS.ProcessEnv, name: string): string | null {
   const filePath = env[`${name}_FILE`];
+  // ファイルの場所だけ決めておき、鍵を置くまでは無いものとして動く（Claude の鍵が届く前など）
   if (filePath) {
-    return readFileSync(filePath, "utf8").trim() || null;
+    return existsSync(filePath) ? readFileSync(filePath, "utf8").trim() || null : null;
   }
   return env[name]?.trim() || null;
 }

@@ -1,0 +1,33 @@
+<Window x:Class="Kikitori.Windows.Ui.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="460"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI, Yu Gothic UI"
+        FontSize="13">
+    <StackPanel Margin="20">
+        <TextBlock x:Name="ServerUrlLabel" Margin="0,0,0,4" />
+        <TextBox x:Name="ServerUrlBox" Padding="4" />
+
+        <TextBlock x:Name="AccessKeyLabel" Margin="0,14,0,4" />
+        <PasswordBox x:Name="AccessKeyBox" Padding="4" />
+        <TextBlock x:Name="AccessKeyHint" Foreground="#5F6367" FontSize="12" Margin="0,4,0,0" />
+
+        <TextBlock x:Name="HotkeyLabel" Margin="0,14,0,4" />
+        <TextBox x:Name="HotkeyBox" Padding="4" />
+
+        <TextBlock x:Name="AutoStopLabel" Margin="0,14,0,4" />
+        <TextBox x:Name="AutoStopBox" Padding="4" Width="80" HorizontalAlignment="Left" />
+
+        <CheckBox x:Name="CorrectionBox" Margin="0,14,0,0" />
+
+        <TextBlock x:Name="MessageText" Margin="0,14,0,0" TextWrapping="Wrap" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button x:Name="TestButton" Padding="14,6" Margin="0,0,8,0" Click="TestButton_Click" />
+            <Button x:Name="SaveButton" Padding="14,6" IsDefault="True" Click="SaveButton_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>

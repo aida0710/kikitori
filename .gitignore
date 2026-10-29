@@ -13,3 +13,6 @@ clients/windows/**/obj/
 clients/android/.gradle/
 clients/android/**/build/
 clients/android/local.properties
+
+# Windows の組み立て結果
+clients/windows/out/

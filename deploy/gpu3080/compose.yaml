@@ -1,0 +1,38 @@
+# RTX 3080 Ti の計算機（10.0.10.178）で、文字起こしと API サーバーを動かす。
+#   docker compose -f deploy/gpu3080/compose.yaml up -d --build
+# 端末からは http://10.0.10.178:8780 につなぐ（LAN と VPN の中だけ）。
+name: kikitori
+
+services:
+  asr:
+    build: ../../asr-worker
+    image: kikitori-asr:local
+    restart: unless-stopped
+    shm_size: 4gb
+    gpus: all
+    environment:
+      KIKITORI_ASR_MODEL: Qwen/Qwen3-ASR-1.7B
+      HF_HUB_OFFLINE: "1"
+    volumes:
+      - ${HOME}/models/hf:/models/hf
+    # 調べるときだけ使う。外には開けない
+    ports:
+      - 127.0.0.1:8781:8781
+
+  server:
+    build:
+      context: ../..
+      dockerfile: apps/server/Dockerfile
+    image: kikitori-server:local
+    restart: unless-stopped
+    depends_on:
+      - asr
+    environment:
+      KIKITORI_ASR_URL: ws://asr:8781/v1/stream
+      KIKITORI_INITIAL_ADMIN_PASSWORD_FILE: /run/secrets/kikitori/admin-password
+      ANTHROPIC_API_KEY_FILE: /run/secrets/kikitori/anthropic-api-key
+    volumes:
+      - ${HOME}/.local/share/kikitori:/data
+      - ${HOME}/.config/kikitori:/run/secrets/kikitori:ro
+    ports:
+      - 10.0.10.178:8780:8780
