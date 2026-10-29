@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- サーバーの場所は利用者が入れるので、http を許す。外の回線から使うときは https の入口を置く -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

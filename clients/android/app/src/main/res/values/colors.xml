@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mado のデザインシステムの上部バーと同じ色 -->
+<resources>
+    <color name="panel_background">#FF151515</color>
+    <color name="panel_border">#FF333333</color>
+    <color name="panel_text">#FFEFEFEF</color>
+    <color name="panel_muted">#FF9AA0A6</color>
+    <color name="indicator">#FF00B9B1</color>
+    <color name="control_hover">#FF333333</color>
+</resources>

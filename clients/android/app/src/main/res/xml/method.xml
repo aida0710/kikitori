@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 音声入力だけのキーボード。"voice" の種類にしておくと、対応したキーボードからは音声入力として呼べる -->
+<input-method xmlns:android="http://schemas.android.com/apk/res/android"
+    android:settingsActivity="io.github.aida0710.kikitori.MainActivity"
+    android:supportsSwitchingToNextInputMethod="true">
+    <subtype
+        android:imeSubtypeMode="voice"
+        android:imeSubtypeLocale="ja_JP"
+        android:label="@string/ime_name"
+        android:isAuxiliary="false" />
+</input-method>

@@ -16,3 +16,5 @@ clients/android/local.properties
 
 # Windows の組み立て結果
 clients/windows/out/
+clients/windows/*.zip
+clients/android/.kotlin/

@@ -1,0 +1,4 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><shape android:shape="oval"><size android:width="48dp" android:height="48dp" /><solid android:color="@color/indicator" /></shape></item>
+    <item android:drawable="@drawable/ic_mic" android:left="12dp" android:top="12dp" android:right="12dp" android:bottom="12dp" />
+</layer-list>

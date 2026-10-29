@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kikitori</string>
+    <string name="ime_name">Kikitori voice input</string>
+
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_listening">Listening</string>
+    <string name="status_finishing">Polishing…</string>
+    <string name="status_done">Done</string>
+    <string name="status_idle">Tap the microphone to talk</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="error_not_configured">Open Kikitori and set the server and access key</string>
+    <string name="error_microphone_permission">Open Kikitori and allow the microphone</string>
+    <string name="error_connection">Cannot reach the server</string>
+    <string name="error_microphone">Cannot use the microphone</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_start">Talk</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_back_to_keyboard">Back to keyboard</string>
+
+    <string name="settings_title">Kikitori settings</string>
+    <string name="settings_server_url">Server URL</string>
+    <string name="settings_access_key">Access key (create it in the dashboard)</string>
+    <string name="settings_access_key_saved">Leave empty to keep the saved key</string>
+    <string name="settings_auto_stop">Seconds of silence before stopping</string>
+    <string name="settings_correction">Polish with Claude</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_saved">Saved</string>
+    <string name="settings_test">Test connection</string>
+    <string name="settings_connected_as">Connected as %1$s</string>
+    <string name="settings_invalid">Cannot save: %1$s</string>
+    <string name="setup_title">Setup</string>
+    <string name="setup_microphone">Allow the microphone</string>
+    <string name="setup_enable_keyboard">Turn on the Kikitori keyboard</string>
+    <string name="setup_switch_keyboard">Switch keyboard</string>
+    <string name="setup_microphone_granted">Microphone: allowed</string>
+    <string name="setup_microphone_missing">Microphone: not allowed</string>
+    <string name="setup_keyboard_enabled">Keyboard: on</string>
+    <string name="setup_keyboard_disabled">Keyboard: off</string>
+    <string name="try_title">Try it here</string>
+    <string name="try_hint">Tap here, then switch to Kikitori with the keyboard button</string>
+</resources>
