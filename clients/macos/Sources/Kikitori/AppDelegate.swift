@@ -29,7 +29,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let wavPath = argument(after: "--wav")
         controller = DictationController(
             panel: panel,
-            createAudioSource: { wavPath.map { WavFileSource(url: URL(fileURLWithPath: $0)) } ?? MicrophoneSource() },
+            createAudioSource: { () -> AudioSource in
+                guard let wavPath else { return MicrophoneSource() }
+                return WavFileSource(url: URL(fileURLWithPath: wavPath))
+            },
             log: Self.log
         )
         controller.onNeedsSettings = { [weak self] in self?.openSettings() }
