@@ -22,6 +22,8 @@ KIKITORI_IME = f"{PACKAGE}/.KikitoriInputMethodService"
 GBOARD_IME = "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME"
 # 入力欄を押してから、キーボードが出てフォーカスが移るまでの間。短いと打った文字が前の欄に入る
 FOCUS_SETTLE_SECONDS = 3
+# input text で一度に送る文字数
+INPUT_TEXT_CHUNK = 8
 
 
 class Emulator:
@@ -67,7 +69,12 @@ def replace_text(emulator: Emulator, resource_id: str, text_command: str) -> Non
     time.sleep(FOCUS_SETTLE_SECONDS)
     emulator.adb("shell input keycombination 113 29")  # Ctrl+A
     emulator.adb("shell input keyevent 67")  # Delete
-    emulator.shell(f'adb shell input text "{text_command}"')
+    # input text は、長い文を一度に送るとエミュレーターが文字を取りこぼすので、短く分けて送る
+    emulator.shell(
+        f'text="{text_command}"; '
+        f'for i in $(seq 0 {INPUT_TEXT_CHUNK} $((${{#text}} - 1))); do '
+        f'adb shell input text "${{text:$i:{INPUT_TEXT_CHUNK}}}"; done'
+    )
     time.sleep(1)
     emulator.adb("shell input keyevent 4")  # キーボードを閉じる
     time.sleep(1)
