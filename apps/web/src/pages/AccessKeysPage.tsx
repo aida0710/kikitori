@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { copyText } from "@mado/design-system/clipboard";
-import { Dialog, EmptyMessage, ErrorNotice, LoadingMessage, useQuery } from "@mado/design-system/react";
+import { Copy, Plus, Trash2 } from "lucide-react";
 import type { AccessKey, CreatedAccessKey } from "@kikitori/protocol";
 import { failureMessage, kikitoriApi } from "../api/kikitoriApi.ts";
 import { PageHeader } from "../components/PageHeader.tsx";
 import { useAction } from "../hooks/useAction.ts";
+import { useQuery } from "../hooks/useQuery.ts";
 import { useText } from "../i18n/useText.ts";
+import { copyText } from "../lib/clipboard.ts";
 import { formatDateTime } from "../lib/displayFormat.ts";
+import { Button } from "../ui/Button.tsx";
+import { Cell, DataTable } from "../ui/DataTable.tsx";
+import { Dialog } from "../ui/Dialog.tsx";
+import { EmptyMessage, ErrorNotice, LoadingMessage } from "../ui/Feedback.tsx";
+import { TextField } from "../ui/Field.tsx";
 
 /** アクセスキーの一覧・作成・削除。作ったキーはダイアログで一度だけ見せる。 */
 export function AccessKeysPage() {
@@ -25,55 +31,38 @@ export function AccessKeysPage() {
   };
 
   return (
-    <section className="page">
+    <section>
       <PageHeader
         title={text.accessKeys}
         description={text.accessKeysDescription}
         actions={
-          <button className="button primary" onClick={() => setCreating(true)}>
+          <Button variant="primary" icon={<Plus />} onClick={() => setCreating(true)}>
             {text.newAccessKey}
-          </button>
+          </Button>
         }
       />
       <ErrorNotice message={deletion.error} />
       {keys.loading && !keys.value && <LoadingMessage label={text.loading} />}
-      {keys.error !== undefined && keys.error !== null && (
-        <ErrorNotice message={failureMessage(keys.error, text.networkError)} retry={keys.reload} />
-      )}
-      {keys.value && keys.value.length === 0 && <EmptyMessage>{text.noAccessKeys}</EmptyMessage>}
+      {keys.error !== null && <ErrorNotice message={failureMessage(keys.error, text.networkError)} onRetry={keys.reload} retryLabel={text.retry} />}
+      {keys.value?.length === 0 && <EmptyMessage>{text.noAccessKeys}</EmptyMessage>}
       {keys.value && keys.value.length > 0 && (
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">{text.accessKeyName}</th>
-                <th scope="col">{text.accessKeyPrefix}</th>
-                <th scope="col">{text.accessKeyCreated}</th>
-                <th scope="col">{text.accessKeyLastUsed}</th>
-                <th scope="col">
-                  <span className="sr-only">{text.delete}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {keys.value.map((key) => (
-                <tr key={key.id}>
-                  <td>{key.name}</td>
-                  <td className="mono">{key.prefix}…</td>
-                  <td className="nowrap">{formatDateTime(key.createdAt, intlLocale)}</td>
-                  <td className="nowrap">
-                    {key.lastUsedAt ? formatDateTime(key.lastUsedAt, intlLocale) : text.accessKeyNever}
-                  </td>
-                  <td>
-                    <button className="button danger" disabled={deletion.pending} onClick={() => remove(key)}>
-                      {text.delete}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable headers={[text.accessKeyName, text.accessKeyPrefix, text.accessKeyCreated, text.accessKeyLastUsed, <span className="sr-only">{text.delete}</span>]}>
+          {keys.value.map((key) => (
+            <tr key={key.id}>
+              <Cell className="whitespace-nowrap">{key.name}</Cell>
+              <Cell className="font-mono text-[12.5px] text-accent-fg">{key.prefix}…</Cell>
+              <Cell className="whitespace-nowrap">{formatDateTime(key.createdAt, intlLocale)}</Cell>
+              <Cell className={`whitespace-nowrap ${key.lastUsedAt ? "" : "text-fg-faint"}`}>
+                {key.lastUsedAt ? formatDateTime(key.lastUsedAt, intlLocale) : text.accessKeyNever}
+              </Cell>
+              <Cell className="text-right">
+                <Button variant="danger" icon={<Trash2 />} disabled={deletion.pending} onClick={() => remove(key)}>
+                  {text.delete}
+                </Button>
+              </Cell>
+            </tr>
+          ))}
+        </DataTable>
       )}
       {creating && (
         <CreateAccessKeyDialog
@@ -98,16 +87,14 @@ function CreateAccessKeyDialog({ onClose, onCreated }: { onClose: () => void; on
   return (
     <Dialog
       title={text.newAccessKey}
-      onClose={onClose}
       closeLabel={text.close}
+      onClose={onClose}
       footer={
         <>
-          <button className="button" onClick={onClose}>
-            {text.cancel}
-          </button>
-          <button className="button primary" form={formId} disabled={action.pending || !name.trim()}>
+          <Button onClick={onClose}>{text.cancel}</Button>
+          <Button variant="primary" form={formId} disabled={action.pending || !name.trim()}>
             {text.create}
-          </button>
+          </Button>
         </>
       }
     >
@@ -118,16 +105,15 @@ function CreateAccessKeyDialog({ onClose, onCreated }: { onClose: () => void; on
           void action.run(async () => onCreated(await kikitoriApi.createAccessKey(name.trim())));
         }}
       >
-        <label className="field">
-          <span>{text.accessKeyName}</span>
-          <input
-            required
-            maxLength={80}
-            placeholder={text.accessKeyNamePlaceholder}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
+        <TextField
+          label={text.accessKeyName}
+          required
+          autoFocus
+          maxLength={80}
+          placeholder={text.accessKeyNamePlaceholder}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
         <ErrorNotice message={action.error} />
       </form>
     </Dialog>
@@ -141,21 +127,23 @@ function CreatedAccessKeyDialog({ accessKey, onClose }: { accessKey: CreatedAcce
     <Dialog
       title={text.accessKeyCreatedTitle}
       subtitle={accessKey.name}
-      onClose={onClose}
       closeLabel={text.close}
+      onClose={onClose}
       footer={
         <>
-          <button className="button" onClick={() => void copyText(accessKey.key).then(setCopied)}>
+          <Button icon={<Copy />} onClick={() => void copyText(accessKey.key).then(setCopied)}>
             {copied ? text.copied : text.copy}
-          </button>
-          <button className="button primary" onClick={onClose}>
+          </Button>
+          <Button variant="primary" onClick={onClose}>
             {text.close}
-          </button>
+          </Button>
         </>
       }
     >
-      <p>{text.accessKeyCreatedNote}</p>
-      <p className="secret-value">{accessKey.key}</p>
+      <p className="mb-3 text-fg-secondary">{text.accessKeyCreatedNote}</p>
+      <p className="select-all break-all rounded-md border border-line-strong bg-canvas px-3 py-2 font-mono text-[12.5px] text-accent-fg">
+        {accessKey.key}
+      </p>
     </Dialog>
   );
 }

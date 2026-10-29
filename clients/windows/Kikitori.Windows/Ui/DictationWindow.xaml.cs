@@ -16,8 +16,8 @@ public partial class DictationWindow : Window
 {
     // 小窓に出す文の長さ。長い入力でも直近の内容だけ見えればよい
     private const int TranscriptTailCharacters = 80;
-    // 画面の下端から小窓までの間（タスクバーの上に浮かせる）
-    private const double BottomMargin = 48;
+    // 画面の下端から小窓までの間（タスクバーの上に浮かせる）。窓の中の影の余白（28）も含む
+    private const double BottomMargin = 32;
     private static readonly TimeSpan HideDelay = TimeSpan.FromSeconds(1.2);
     // エラーは読めるように長めに出す
     private static readonly TimeSpan ErrorHideDelay = TimeSpan.FromSeconds(4);
@@ -117,7 +117,7 @@ public partial class DictationWindow : Window
         StatusText.Text = status;
         if (MicrophoneButton.Template.FindName("Disc", MicrophoneButton) is Ellipse disc)
         {
-            disc.Fill = listening ? (Brush)FindResource("Indicator") : (Brush)FindResource("Muted");
+            disc.Fill = listening ? (Brush)FindResource("Indicator") : (Brush)FindResource("Idle");
         }
         if (!listening)
         {

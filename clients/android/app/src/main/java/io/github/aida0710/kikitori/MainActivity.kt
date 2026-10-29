@@ -156,7 +156,7 @@ class MainActivity : Activity() {
 
     private companion object {
         const val MICROPHONE_REQUEST = 1
-        // Mado のデザインシステムの success・error と同じ色
+        // 設定画面は端末の明るい・暗い表示に従うので、どちらの地でも読める濃さの緑と赤にする
         val SUCCESS_COLOR = Color.parseColor("#147136")
         val ERROR_COLOR = Color.parseColor("#BA2737")
     }

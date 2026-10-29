@@ -1,5 +1,5 @@
 /** API サーバー（/api）の呼び出し。応答は @kikitori/protocol の zod で確かめる。 */
-import { isApiError, jsonRequestInit, NETWORK_ERROR_CODE, requestJson } from "@mado/design-system/http";
+import { isApiError, jsonRequestInit, NETWORK_ERROR_CODE, requestJson } from "../lib/http.ts";
 import {
   accessKeySchema,
   createdAccessKeySchema,

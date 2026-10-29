@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Mado のデザインシステムの上部バーと同じ色 -->
+<!-- 管理画面と同じ色（黒の面・細い線・紫の強調） -->
 <resources>
-    <color name="panel_background">#FF151515</color>
-    <color name="panel_border">#FF333333</color>
-    <color name="panel_text">#FFEFEFEF</color>
-    <color name="panel_muted">#FF9AA0A6</color>
-    <color name="indicator">#FF00B9B1</color>
-    <color name="control_hover">#FF333333</color>
+    <color name="panel_background">#FF141414</color>
+    <color name="panel_border">#FF2A2A2A</color>
+    <color name="panel_text">#FFEDEDED</color>
+    <color name="panel_muted">#FF8F8F8F</color>
+    <color name="indicator">#FF8B5CF6</color>
+    <color name="indicator_deep">#FF6366F1</color>
+    <color name="control_hover">#FF1A1A1A</color>
 </resources>

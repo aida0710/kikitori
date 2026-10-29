@@ -103,7 +103,7 @@ export const serverStatusSchema = z.object({
 });
 export type ServerStatus = z.infer<typeof serverStatusSchema>;
 
-/** エラーの応答。Mado のデザインシステムの requestJson と同じ形（error が画面にそのまま出す文）。 */
+/** エラーの応答。error は画面にそのまま出す文、code は種類（invalid_request など）。 */
 export interface ApiErrorBody {
   error: string;
   code: string;

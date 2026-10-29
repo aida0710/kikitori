@@ -1,9 +1,9 @@
-import { isUnauthorizedError } from "@mado/design-system/http";
-import { ErrorNotice, LoadingMessage, useQuery } from "@mado/design-system/react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { failureMessage, kikitoriApi } from "./api/kikitoriApi.ts";
+import { useQuery } from "./hooks/useQuery.ts";
 import { useText } from "./i18n/useText.ts";
 import { AppShell } from "./layout/AppShell.tsx";
+import { isUnauthorizedError } from "./lib/http.ts";
 import { AccessKeysPage } from "./pages/AccessKeysPage.tsx";
 import { HistoryPage } from "./pages/HistoryPage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
@@ -11,6 +11,7 @@ import { OverviewPage } from "./pages/OverviewPage.tsx";
 import { ServerSettingsPage } from "./pages/ServerSettingsPage.tsx";
 import { SettingsPage } from "./pages/SettingsPage.tsx";
 import { UsersPage } from "./pages/UsersPage.tsx";
+import { ErrorNotice, LoadingMessage } from "./ui/Feedback.tsx";
 
 /** ログインしているかで、ログイン画面か、枠と各画面かを出す。 */
 export function App() {
@@ -21,7 +22,7 @@ export function App() {
   }
   if (!me.value) {
     if (me.error && !isUnauthorizedError(me.error)) {
-      return <ErrorNotice message={failureMessage(me.error, text.networkError)} retry={me.reload} />;
+      return <ErrorNotice message={failureMessage(me.error, text.networkError)} onRetry={me.reload} retryLabel={text.retry} />;
     }
     return <LoginPage onLogin={me.reload} />;
   }

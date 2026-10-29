@@ -15,6 +15,9 @@ internal sealed class DictationController
     private enum State { Idle, Listening, Finishing }
 
     private static readonly TimeSpan AutoStopCheckInterval = TimeSpan.FromSeconds(1);
+    // 最後の区切りを打ってから IME を戻すまでの間。文字を後から処理するアプリが、打った文字を
+    // 受け取り終えるのを待つ（終わったことを知る手段が無いので時間で待つ。小窓が消えるのと同じ頃）
+    private static readonly TimeSpan ImeResumeDelay = TimeSpan.FromSeconds(1);
 
     private readonly Func<ClientSettings> loadSettings;
     private readonly Func<IAudioSource> createAudioSource;
@@ -26,6 +29,7 @@ internal sealed class DictationController
     private State state = State.Idle;
     private IAudioSource? audio;
     private DictationConnection? connection;
+    private ImeSuspension? imeSuspension;
     private DateTime lastActivity;
     private TimeSpan autoStopAfter;
 
@@ -101,6 +105,15 @@ internal sealed class DictationController
             Fail(current, UiText.MicrophoneFailed, error);
             return;
         }
+        // 最初の区切りは話し始めてから 0.6 秒以上あとに届くので、録音を始めてから IME をオフにしても間に合う
+        var suspension = await ImeSuspension.SuspendIfOpenAsync(log);
+        if (connection != current)
+        {
+            // オフにしている間に取り消された
+            suspension?.Resume();
+            return;
+        }
+        imeSuspension = suspension;
 
         try
         {
@@ -219,11 +232,18 @@ internal sealed class DictationController
         audio?.Dispose();
         audio = null;
         connection = null;
+        var suspension = imeSuspension;
+        imeSuspension = null;
         if (showStatus)
         {
             window.ShowFinished(status);
         }
         await source.DisposeAsync();
+        if (suspension is not null)
+        {
+            await Task.Delay(ImeResumeDelay);
+            suspension.Resume();
+        }
         Finished?.Invoke(this, EventArgs.Empty);
     }
 }

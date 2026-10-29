@@ -1,23 +1,12 @@
-/**
- * 画面の文言。表示言語はブラウザの優先言語、取れなければ英語（Mado のデザインシステムの createLocaleStore）。
- * API のエラーの文は訳さずにそのまま出す。
- */
-import { createLocaleStore, type Locale } from "@mado/design-system/locale";
-
-export const localeStore = createLocaleStore({ storageKey: "kikitori.locale" });
+/** 画面の文言。API のエラーの文は訳さずにそのまま出す。 */
+import type { Locale } from "./locale.ts";
 
 const en = {
   productDescription: "Streaming voice input with Claude polishing",
   navigation: "Navigation",
-  navigationSidebar: "Main navigation",
   openNavigation: "Open navigation",
   closeNavigation: "Close navigation",
-  expandNavigation: "Expand navigation",
-  collapseNavigation: "Collapse navigation",
-  resizeNavigation: "Resize navigation",
   language: "Language",
-  darkTheme: "Dark theme",
-  lightTheme: "Light theme",
   userMenu: "Account menu",
   skipContent: "Skip to content",
   loading: "Loading…",
@@ -30,6 +19,7 @@ const en = {
   copy: "Copy",
   copied: "Copied",
   networkError: "Cannot reach the server",
+  retry: "Retry",
 
   groupDictation: "Dictation",
   groupAdministration: "Administration",
@@ -121,15 +111,9 @@ export type TextCatalog = typeof en;
 const ja: TextCatalog = {
   productDescription: "ストリーミングの文字起こしとClaudeの清書で入力する音声入力",
   navigation: "ナビゲーション",
-  navigationSidebar: "メインのナビゲーション",
   openNavigation: "ナビゲーションを開く",
   closeNavigation: "ナビゲーションを閉じる",
-  expandNavigation: "ナビゲーションを広げる",
-  collapseNavigation: "ナビゲーションを畳む",
-  resizeNavigation: "ナビゲーションの幅を変える",
   language: "表示言語",
-  darkTheme: "ダークテーマ",
-  lightTheme: "ライトテーマ",
   userMenu: "アカウントのメニュー",
   skipContent: "本文へ移動",
   loading: "読み込んでいます…",
@@ -142,6 +126,7 @@ const ja: TextCatalog = {
   copy: "コピー",
   copied: "コピーしました",
   networkError: "サーバーにつながりません",
+  retry: "やり直す",
 
   groupDictation: "音声入力",
   groupAdministration: "管理",

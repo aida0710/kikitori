@@ -1,24 +1,25 @@
 import { useEffect, useState } from "react";
-import { ErrorNotice, LoadingMessage, useQuery } from "@mado/design-system/react";
 import type { UserSettings } from "@kikitori/protocol";
 import { failureMessage, kikitoriApi } from "../api/kikitoriApi.ts";
 import { PageHeader } from "../components/PageHeader.tsx";
 import { useAction } from "../hooks/useAction.ts";
+import { useQuery } from "../hooks/useQuery.ts";
 import { useText } from "../i18n/useText.ts";
+import { Button } from "../ui/Button.tsx";
+import { ErrorNotice, LoadingMessage, SuccessNotice } from "../ui/Feedback.tsx";
+import { CheckboxField, TextAreaField, TextField } from "../ui/Field.tsx";
 
 /** 利用者ごとの清書の設定と、パスワードの変更。 */
 export function SettingsPage() {
   const { text } = useText();
   const loaded = useQuery({ key: "user-settings", load: kikitoriApi.userSettings });
   return (
-    <section className="page">
+    <section>
       <PageHeader title={text.settings} description={text.settingsDescription} />
       {loaded.loading && !loaded.value && <LoadingMessage label={text.loading} />}
-      {loaded.error !== undefined && loaded.error !== null && (
-        <ErrorNotice message={failureMessage(loaded.error, text.networkError)} retry={loaded.reload} />
-      )}
+      {loaded.error !== null && <ErrorNotice message={failureMessage(loaded.error, text.networkError)} onRetry={loaded.reload} retryLabel={text.retry} />}
       {loaded.value && <CorrectionSettingsForm initial={loaded.value} />}
-      <h2 className="section-heading mt-10">{text.changePassword}</h2>
+      <h2 className="mb-4 mt-10 text-[16px] font-semibold">{text.changePassword}</h2>
       <PasswordForm />
     </section>
   );
@@ -41,37 +42,30 @@ function CorrectionSettingsForm({ initial }: { initial: UserSettings }) {
         });
       }}
     >
-      <label className="field">
-        <span>{text.terms}</span>
-        <textarea
-          rows={8}
-          value={settings.terms}
-          onChange={(event) => setSettings({ ...settings, terms: event.target.value })}
-        />
-        <span className="muted">{text.termsNote}</span>
-      </label>
-      <label className="field">
-        <span>{text.instructions}</span>
-        <textarea
-          rows={3}
-          value={settings.instructions}
-          onChange={(event) => setSettings({ ...settings, instructions: event.target.value })}
-        />
-        <span className="muted">{text.instructionsNote}</span>
-      </label>
-      <label className="checkbox-field">
-        <input
-          type="checkbox"
-          checked={settings.saveHistory}
-          onChange={(event) => setSettings({ ...settings, saveHistory: event.target.checked })}
-        />
-        <span>{text.saveHistory}</span>
-      </label>
+      <TextAreaField
+        label={text.terms}
+        note={text.termsNote}
+        rows={8}
+        value={settings.terms}
+        onChange={(event) => setSettings({ ...settings, terms: event.target.value })}
+      />
+      <TextAreaField
+        label={text.instructions}
+        note={text.instructionsNote}
+        rows={3}
+        value={settings.instructions}
+        onChange={(event) => setSettings({ ...settings, instructions: event.target.value })}
+      />
+      <CheckboxField
+        label={text.saveHistory}
+        checked={settings.saveHistory}
+        onChange={(event) => setSettings({ ...settings, saveHistory: event.target.checked })}
+      />
       <ErrorNotice message={action.error} />
-      {saved && <p className="notice success">{text.saved}</p>}
-      <button className="button primary" disabled={action.pending}>
+      {saved && <SuccessNotice>{text.saved}</SuccessNotice>}
+      <Button variant="primary" disabled={action.pending}>
         {text.save}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -96,32 +90,26 @@ function PasswordForm() {
         });
       }}
     >
-      <label className="field">
-        <span>{text.currentPassword}</span>
-        <input
-          required
-          type="password"
-          autoComplete="current-password"
-          value={currentPassword}
-          onChange={(event) => setCurrentPassword(event.target.value)}
-        />
-      </label>
-      <label className="field">
-        <span>{text.newPassword}</span>
-        <input
-          required
-          minLength={8}
-          type="password"
-          autoComplete="new-password"
-          value={newPassword}
-          onChange={(event) => setNewPassword(event.target.value)}
-        />
-      </label>
+      <TextField
+        label={text.currentPassword}
+        required
+        type="password"
+        autoComplete="current-password"
+        value={currentPassword}
+        onChange={(event) => setCurrentPassword(event.target.value)}
+      />
+      <TextField
+        label={text.newPassword}
+        required
+        minLength={8}
+        type="password"
+        autoComplete="new-password"
+        value={newPassword}
+        onChange={(event) => setNewPassword(event.target.value)}
+      />
       <ErrorNotice message={action.error} />
-      {changed && <p className="notice success">{text.passwordChanged}</p>}
-      <button className="button" disabled={action.pending}>
-        {text.changePassword}
-      </button>
+      {changed && <SuccessNotice>{text.passwordChanged}</SuccessNotice>}
+      <Button disabled={action.pending}>{text.changePassword}</Button>
     </form>
   );
 }

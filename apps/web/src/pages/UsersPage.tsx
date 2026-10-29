@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { Dialog, ErrorNotice, LoadingMessage, useQuery } from "@mado/design-system/react";
+import { Plus, Trash2 } from "lucide-react";
 import type { User, UserRole } from "@kikitori/protocol";
 import { failureMessage, kikitoriApi } from "../api/kikitoriApi.ts";
 import { PageHeader } from "../components/PageHeader.tsx";
-import { StatusBadge } from "../components/StatusBadge.tsx";
 import { useAction } from "../hooks/useAction.ts";
+import { useQuery } from "../hooks/useQuery.ts";
 import { useText } from "../i18n/useText.ts";
 import { formatDateTime } from "../lib/displayFormat.ts";
+import { Button } from "../ui/Button.tsx";
+import { Cell, DataTable } from "../ui/DataTable.tsx";
+import { Dialog } from "../ui/Dialog.tsx";
+import { ErrorNotice, LoadingMessage } from "../ui/Feedback.tsx";
+import { InlineSelect, SelectField, TextField } from "../ui/Field.tsx";
+import { StatusBadge } from "../ui/StatusBadge.tsx";
 
 /** 利用者の一覧と、作成・役割の変更・無効化・パスワードの設定し直し・削除（管理者だけ）。 */
 export function UsersPage({ currentUser }: { currentUser: User }) {
@@ -15,7 +21,6 @@ export function UsersPage({ currentUser }: { currentUser: User }) {
   const [creating, setCreating] = useState(false);
   const [resetting, setResetting] = useState<User | null>(null);
   const action = useAction();
-  const roleLabel = (role: UserRole) => (role === "admin" ? text.roleAdmin : text.roleMember);
 
   const change = (user: User, changes: { role?: UserRole; disabled?: boolean }) =>
     void action.run(async () => {
@@ -31,78 +36,57 @@ export function UsersPage({ currentUser }: { currentUser: User }) {
   };
 
   return (
-    <section className="page">
+    <section>
       <PageHeader
         title={text.users}
         description={text.usersDescription}
         actions={
-          <button className="button primary" onClick={() => setCreating(true)}>
+          <Button variant="primary" icon={<Plus />} onClick={() => setCreating(true)}>
             {text.newUser}
-          </button>
+          </Button>
         }
       />
       <ErrorNotice message={action.error} />
       {users.loading && !users.value && <LoadingMessage label={text.loading} />}
-      {users.error !== undefined && users.error !== null && (
-        <ErrorNotice message={failureMessage(users.error, text.networkError)} retry={users.reload} />
-      )}
+      {users.error !== null && <ErrorNotice message={failureMessage(users.error, text.networkError)} onRetry={users.reload} retryLabel={text.retry} />}
       {users.value && (
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">{text.username}</th>
-                <th scope="col">{text.role}</th>
-                <th scope="col">{text.state}</th>
-                <th scope="col">{text.accessKeyCreated}</th>
-                <th scope="col">
-                  <span className="sr-only">{text.settings}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.value.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.username}</td>
-                  <td>
-                    <select
-                      aria-label={text.role}
-                      value={user.role}
-                      disabled={action.pending}
-                      onChange={(event) => change(user, { role: event.target.value as UserRole })}
-                    >
-                      <option value="admin">{roleLabel("admin")}</option>
-                      <option value="member">{roleLabel("member")}</option>
-                    </select>
-                  </td>
-                  <td>
-                    <StatusBadge ok={!user.disabled} label={user.disabled ? text.disabled : text.active} />
-                  </td>
-                  <td className="nowrap">{formatDateTime(user.createdAt, intlLocale)}</td>
-                  <td>
-                    <div className="flex flex-wrap gap-2">
-                      <button className="button small" disabled={action.pending} onClick={() => setResetting(user)}>
-                        {text.resetPassword}
-                      </button>
-                      <button
-                        className="button small"
-                        disabled={action.pending}
-                        onClick={() => change(user, { disabled: !user.disabled })}
-                      >
-                        {user.disabled ? text.enable : text.disable}
-                      </button>
-                      {user.id !== currentUser.id && (
-                        <button className="button small danger" disabled={action.pending} onClick={() => remove(user)}>
-                          {text.delete}
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable headers={[text.username, text.role, text.state, text.accessKeyCreated, <span className="sr-only">{text.settings}</span>]}>
+          {users.value.map((user) => (
+            <tr key={user.id}>
+              <Cell>{user.username}</Cell>
+              <Cell>
+                <InlineSelect
+                  aria-label={text.role}
+                  value={user.role}
+                  disabled={action.pending}
+                  onChange={(event) => change(user, { role: event.target.value as UserRole })}
+                >
+                  <option value="admin">{text.roleAdmin}</option>
+                  <option value="member">{text.roleMember}</option>
+                </InlineSelect>
+              </Cell>
+              <Cell>
+                <StatusBadge ok={!user.disabled} label={user.disabled ? text.disabled : text.active} />
+              </Cell>
+              <Cell className="whitespace-nowrap">{formatDateTime(user.createdAt, intlLocale)}</Cell>
+              <Cell>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button disabled={action.pending} onClick={() => setResetting(user)}>
+                    {text.resetPassword}
+                  </Button>
+                  <Button disabled={action.pending} onClick={() => change(user, { disabled: !user.disabled })}>
+                    {user.disabled ? text.enable : text.disable}
+                  </Button>
+                  {user.id !== currentUser.id && (
+                    <Button variant="danger" icon={<Trash2 />} disabled={action.pending} onClick={() => remove(user)}>
+                      {text.delete}
+                    </Button>
+                  )}
+                </div>
+              </Cell>
+            </tr>
+          ))}
+        </DataTable>
       )}
       {creating && (
         <UserFormDialog
@@ -117,7 +101,8 @@ export function UsersPage({ currentUser }: { currentUser: User }) {
       )}
       {resetting && (
         <UserFormDialog
-          title={`${text.resetPassword}: ${resetting.username}`}
+          title={text.resetPassword}
+          subtitle={resetting.username}
           passwordOnly
           onClose={() => setResetting(null)}
           onSubmit={async ({ password }) => {
@@ -138,11 +123,13 @@ interface UserFormValues {
 
 function UserFormDialog({
   title,
+  subtitle,
   passwordOnly = false,
   onClose,
   onSubmit,
 }: {
   title: string;
+  subtitle?: string;
   passwordOnly?: boolean;
   onClose: () => void;
   onSubmit: (values: UserFormValues) => Promise<void>;
@@ -154,16 +141,15 @@ function UserFormDialog({
   return (
     <Dialog
       title={title}
-      onClose={onClose}
+      subtitle={subtitle}
       closeLabel={text.close}
+      onClose={onClose}
       footer={
         <>
-          <button className="button" onClick={onClose}>
-            {text.cancel}
-          </button>
-          <button className="button primary" form={formId} disabled={action.pending}>
+          <Button onClick={onClose}>{text.cancel}</Button>
+          <Button variant="primary" form={formId} disabled={action.pending}>
             {text.save}
-          </button>
+          </Button>
         </>
       }
     >
@@ -175,35 +161,29 @@ function UserFormDialog({
         }}
       >
         {!passwordOnly && (
-          <label className="field">
-            <span>{text.username}</span>
-            <input
-              required
-              autoComplete="off"
-              value={values.username}
-              onChange={(event) => setValues({ ...values, username: event.target.value })}
-            />
-          </label>
-        )}
-        <label className="field">
-          <span>{text.newPassword}</span>
-          <input
+          <TextField
+            label={text.username}
             required
-            minLength={8}
-            type="password"
-            autoComplete="new-password"
-            value={values.password}
-            onChange={(event) => setValues({ ...values, password: event.target.value })}
+            autoFocus
+            autoComplete="off"
+            value={values.username}
+            onChange={(event) => setValues({ ...values, username: event.target.value })}
           />
-        </label>
+        )}
+        <TextField
+          label={text.newPassword}
+          required
+          minLength={8}
+          type="password"
+          autoComplete="new-password"
+          value={values.password}
+          onChange={(event) => setValues({ ...values, password: event.target.value })}
+        />
         {!passwordOnly && (
-          <label className="field">
-            <span>{text.role}</span>
-            <select value={values.role} onChange={(event) => setValues({ ...values, role: event.target.value as UserRole })}>
-              <option value="member">{text.roleMember}</option>
-              <option value="admin">{text.roleAdmin}</option>
-            </select>
-          </label>
+          <SelectField label={text.role} value={values.role} onChange={(event) => setValues({ ...values, role: event.target.value as UserRole })}>
+            <option value="member">{text.roleMember}</option>
+            <option value="admin">{text.roleAdmin}</option>
+          </SelectField>
         )}
         <ErrorNotice message={action.error} />
       </form>

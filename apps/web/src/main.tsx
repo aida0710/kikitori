@@ -2,10 +2,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App.tsx";
-import { localeStore } from "./i18n/catalog.ts";
+import { applyLocaleToDocument } from "./i18n/locale.ts";
 import "./styles.css";
 
-localeStore.applyToDocument();
+applyLocaleToDocument();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

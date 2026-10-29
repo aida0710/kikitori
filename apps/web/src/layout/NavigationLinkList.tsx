@@ -3,8 +3,8 @@ import { NavLink } from "react-router-dom";
 import { useText } from "../i18n/useText.ts";
 import type { NavigationGroup } from "./navigation.ts";
 
-/** ナビゲーションのリンク。アイコンだけの列では名前をツールチップで出す。 */
-export function NavigationLinkList({ groups, showsTitles = false }: { groups: NavigationGroup[]; showsTitles?: boolean }) {
+/** ナビゲーションのリンク。サイドバーとドロワーで同じものを使う。 */
+export function NavigationLinkList({ groups, onNavigate }: { groups: NavigationGroup[]; onNavigate?: () => void }) {
   const { text } = useText();
   const idPrefix = useId();
   return (
@@ -12,14 +12,22 @@ export function NavigationLinkList({ groups, showsTitles = false }: { groups: Na
       {groups.map((group, index) => {
         const labelId = `${idPrefix}-group-${index}`;
         return (
-          <div key={group.label} className="navigation-group" role="group" aria-labelledby={labelId}>
-            <span id={labelId} className="navigation-group-label">
+          <div key={group.label} className="mb-[18px]" role="group" aria-labelledby={labelId}>
+            <span id={labelId} className="block px-2.5 pb-1.5 text-[11px] uppercase tracking-[0.04em] text-fg-faint">
               {group.label}
             </span>
             {group.links.map(({ to, label, Icon }) => (
-              <NavLink key={to} to={to} end={to === "/"} className="navigation-link" title={showsTitles ? label : undefined}>
-                <Icon aria-hidden="true" />
-                <span className="navigation-label">{label}</span>
+              <NavLink
+                key={to}
+                to={to}
+                end={to === "/"}
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 rounded-md px-2.5 py-[7px] ${isActive ? "bg-hover text-white" : "text-fg-secondary hover:text-fg"}`
+                }
+              >
+                <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
+                <span>{label}</span>
               </NavLink>
             ))}
           </div>

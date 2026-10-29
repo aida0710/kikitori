@@ -1,25 +1,59 @@
 /*
- * Mado のデザインシステムを components の層に入れ、Tailwind のユーティリティ（配置の調整）が勝つようにする。
- * Tailwind の preflight（base の層）よりはデザインシステムの要素の既定が勝つ。
+ * 管理画面の見た目。黒の地に細い線、等幅の文字、紫の強調（デザインの案 D）。
+ * 色は役割の名前で @theme に置き、Tailwind のユーティリティ（bg-canvas・border-line など）で使う。
  */
-@layer theme, base, components, utilities;
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
 @import "@fontsource/noto-sans-jp/400.css";
-@import "@fontsource/noto-sans-jp/600.css";
-@import "@mado/design-system/fonts.css";
-@import "@mado/design-system/tokens.css";
-@import "@mado/design-system/base.css" layer(components);
-@import "@mado/design-system/components.css" layer(components);
-@import "@mado/design-system/shell.css" layer(components);
-@import "tailwindcss/utilities.css" layer(utilities);
+@import "@fontsource/noto-sans-jp/500.css";
+@import "@fontsource/noto-sans-jp/700.css";
+@import "@fontsource/jetbrains-mono/400.css";
 
-/* アクセスキーを見せる欄。選びやすく、折り返して全部見えるようにする */
-.secret-value {
-  font-family: var(--mono);
-  word-break: break-all;
-  user-select: all;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 8px 10px;
+@theme {
+  --font-sans: "Inter", "Noto Sans JP", sans-serif;
+  --font-mono: "JetBrains Mono", "Noto Sans JP", monospace;
+
+  /* 面。奥から手前へ */
+  --color-canvas: #0a0a0a;
+  --color-panel: #0f0f0f;
+  --color-raised: #141414;
+  --color-hover: #1a1a1a;
+
+  /* 線。区切り・表の行・操作部品の枠 */
+  --color-line: #1f1f1f;
+  --color-line-subtle: #191919;
+  --color-line-strong: #2e2e2e;
+
+  /* 文字。どれも canvas と panel の上で 4.5:1 以上 */
+  --color-fg: #ededed;
+  --color-fg-secondary: #a1a1a1;
+  --color-fg-muted: #8f8f8f;
+  --color-fg-faint: #6b6b6b;
+
+  /* 強調（ロゴとマイクの印は accent から accent-deep への傾き） */
+  --color-accent: #8b5cf6;
+  --color-accent-deep: #6366f1;
+  --color-accent-fg: #c4b5fd;
+  --color-danger: #f87171;
+  --color-success: #4ade80;
+}
+
+@layer base {
+  /* 行の高さは試作と同じくブラウザの既定（normal）にする。Tailwind の既定は 1.5 */
+  html {
+    color-scheme: dark;
+    line-height: normal;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: 14px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 }

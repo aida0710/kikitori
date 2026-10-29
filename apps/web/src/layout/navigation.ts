@@ -1,4 +1,4 @@
-import { History, KeyRound, LayoutDashboard, Server, Settings, Users, type LucideIcon } from "lucide-react";
+import { History, Key, LayoutDashboard, Server, Settings, Users, type LucideIcon } from "lucide-react";
 import type { User } from "@kikitori/protocol";
 import type { TextCatalog } from "../i18n/catalog.ts";
 
@@ -20,7 +20,7 @@ export function navigationGroups(user: User, text: TextCatalog): NavigationGroup
       label: text.groupDictation,
       links: [
         { to: "/", label: text.overview, Icon: LayoutDashboard },
-        { to: "/keys", label: text.accessKeys, Icon: KeyRound },
+        { to: "/keys", label: text.accessKeys, Icon: Key },
         { to: "/history", label: text.history, Icon: History },
         { to: "/settings", label: text.settings, Icon: Settings },
       ],

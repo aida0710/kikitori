@@ -13,7 +13,7 @@
 |---|---|
 | `asr-worker/` | 文字起こしの常駐プロセス（Python、Qwen3-ASR・Silero VAD）。GPUの計算機で動かす内部の口 |
 | `apps/server/` | APIサーバー（Node.js 24、Hono、SQLite）。端末の音声を文字起こしへ流し、清書して返す。管理画面も出す |
-| `apps/web/` | 管理画面（React、Vite、Tailwind CSS、[Mado Design System](https://github.com/aida0710/mado-design-systems)） |
+| `apps/web/` | 管理画面（React、Vite、Tailwind CSS） |
 | `packages/protocol/` | APIサーバーと端末・管理画面の要求と応答の形（zod） |
 | `clients/windows/` | Windowsの常駐アプリ（.NET 10、WPF） |
 | `clients/android/` | Androidの音声入力のキーボード（Kotlin、API 28以上） |
