@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Kikitori</string>
-    <string name="ime_name">Kikitori 音声入力</string>
+    <string name="ime_name">Kikitori音声入力</string>
 
     <string name="status_connecting">接続しています…</string>
     <string name="status_listening">聞いています</string>
@@ -9,8 +9,8 @@
     <string name="status_done">入力しました</string>
     <string name="status_idle">マイクを押して話します</string>
     <string name="status_cancelled">取り消しました</string>
-    <string name="error_not_configured">Kikitori のアプリでサーバーとアクセスキーを設定してください</string>
-    <string name="error_microphone_permission">Kikitori のアプリでマイクを許可してください</string>
+    <string name="error_not_configured">Kikitoriのアプリでサーバーとアクセスキーを設定してください</string>
+    <string name="error_microphone_permission">Kikitoriのアプリでマイクを許可してください</string>
     <string name="error_connection">サーバーにつながりません</string>
     <string name="error_microphone">マイクを使えません</string>
     <string name="action_stop">止める</string>
@@ -18,25 +18,25 @@
     <string name="action_cancel">取り消す</string>
     <string name="action_back_to_keyboard">キーボードに戻る</string>
 
-    <string name="settings_title">Kikitori の設定</string>
-    <string name="settings_server_url">サーバーの URL</string>
+    <string name="settings_title">Kikitoriの設定</string>
+    <string name="settings_server_url">サーバーのURL</string>
     <string name="settings_access_key">アクセスキー（管理画面で作ったもの）</string>
     <string name="settings_access_key_saved">空欄のままなら、保存済みのアクセスキーを使います</string>
     <string name="settings_auto_stop">声が無いときに自動で止めるまでの秒数</string>
-    <string name="settings_correction">Claude で清書する</string>
+    <string name="settings_correction">Claudeで清書する</string>
     <string name="settings_save">保存</string>
     <string name="settings_saved">保存しました</string>
     <string name="settings_test">接続を試す</string>
-    <string name="settings_connected_as">%1$s として接続できました</string>
+    <string name="settings_connected_as">%1$sとして接続できました</string>
     <string name="settings_invalid">保存できません: %1$s</string>
     <string name="setup_title">準備</string>
     <string name="setup_microphone">マイクを許可する</string>
-    <string name="setup_enable_keyboard">Kikitori のキーボードをオンにする</string>
+    <string name="setup_enable_keyboard">Kikitoriのキーボードをオンにする</string>
     <string name="setup_switch_keyboard">キーボードを切り替える</string>
     <string name="setup_microphone_granted">マイク: 許可済み</string>
     <string name="setup_microphone_missing">マイク: 未許可</string>
     <string name="setup_keyboard_enabled">キーボード: オン</string>
     <string name="setup_keyboard_disabled">キーボード: オフ</string>
     <string name="try_title">ここで試す</string>
-    <string name="try_hint">ここを押してから、キーボードの切り替えで Kikitori を選びます</string>
+    <string name="try_hint">ここを押してから、キーボードの切り替えでKikitoriを選びます</string>
 </resources>

@@ -58,48 +58,53 @@ export const userSettingsSchema = z.object({
 });
 export type UserSettings = z.infer<typeof userSettingsSchema>;
 
-export interface User {
-  id: number;
-  username: string;
-  role: UserRole;
-  disabled: boolean;
-  createdAt: string;
-}
+export const userSchema = z.object({
+  id: z.number(),
+  username: z.string(),
+  role: userRoleSchema,
+  disabled: z.boolean(),
+  createdAt: z.string(),
+});
+export type User = z.infer<typeof userSchema>;
 
-export interface AccessKey {
-  id: number;
-  name: string;
-  prefix: string;
-  createdAt: string;
-  lastUsedAt: string | null;
-}
+export const accessKeySchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  prefix: z.string(),
+  createdAt: z.string(),
+  lastUsedAt: z.string().nullable(),
+});
+export type AccessKey = z.infer<typeof accessKeySchema>;
 
 /** 作った直後だけ鍵そのものを返す。以後は prefix しか見られない。 */
-export interface CreatedAccessKey extends AccessKey {
-  key: string;
-}
+export const createdAccessKeySchema = accessKeySchema.extend({ key: z.string() });
+export type CreatedAccessKey = z.infer<typeof createdAccessKeySchema>;
 
-export interface Dictation {
-  id: number;
-  client: string | null;
-  startedAt: string;
-  endedAt: string | null;
-  audioMs: number;
-  segmentCount: number;
-  rawText: string | null;
-  correctedText: string | null;
-  correctionModel: string | null;
-  inputTokens: number;
-  outputTokens: number;
-  maxCorrectionMs: number | null;
-  error: string | null;
-}
+export const dictationSchema = z.object({
+  id: z.number(),
+  client: z.string().nullable(),
+  startedAt: z.string(),
+  endedAt: z.string().nullable(),
+  audioMs: z.number(),
+  segmentCount: z.number(),
+  rawText: z.string().nullable(),
+  correctedText: z.string().nullable(),
+  correctionModel: z.string().nullable(),
+  inputTokens: z.number(),
+  outputTokens: z.number(),
+  maxCorrectionMs: z.number().nullable(),
+  error: z.string().nullable(),
+});
+export type Dictation = z.infer<typeof dictationSchema>;
 
-export interface ServerStatus {
-  asr: { reachable: boolean; model: string | null };
-  correction: { configured: boolean };
-}
+export const serverStatusSchema = z.object({
+  asr: z.object({ reachable: z.boolean(), model: z.string().nullable() }),
+  correction: z.object({ configured: z.boolean() }),
+});
+export type ServerStatus = z.infer<typeof serverStatusSchema>;
 
+/** エラーの応答。Mado のデザインシステムの requestJson と同じ形（error が画面にそのまま出す文）。 */
 export interface ApiErrorBody {
-  error: { code: string; message: string };
+  error: string;
+  code: string;
 }

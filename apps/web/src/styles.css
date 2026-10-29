@@ -1,0 +1,25 @@
+/*
+ * Mado のデザインシステムを components の層に入れ、Tailwind のユーティリティ（配置の調整）が勝つようにする。
+ * Tailwind の preflight（base の層）よりはデザインシステムの要素の既定が勝つ。
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "@fontsource/noto-sans-jp/400.css";
+@import "@fontsource/noto-sans-jp/600.css";
+@import "@mado/design-system/fonts.css";
+@import "@mado/design-system/tokens.css";
+@import "@mado/design-system/base.css" layer(components);
+@import "@mado/design-system/components.css" layer(components);
+@import "@mado/design-system/shell.css" layer(components);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* アクセスキーを見せる欄。選びやすく、折り返して全部見えるようにする */
+.secret-value {
+  font-family: var(--mono);
+  word-break: break-all;
+  user-select: all;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+}

@@ -97,7 +97,7 @@ public partial class SettingsWindow : Window
             else
             {
                 // サーバーの文をそのまま出す
-                ShowMessage(document.RootElement.GetProperty("error").GetProperty("message").GetString() ?? body, ErrorBrush);
+                ShowMessage(document.RootElement.GetProperty("error").GetString() ?? body, ErrorBrush);
             }
         }
         catch (Exception error)

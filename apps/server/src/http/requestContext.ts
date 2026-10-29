@@ -11,7 +11,7 @@ export interface AppEnv {
 }
 
 export function errorResponse(c: Context, status: 400 | 401 | 403 | 404 | 409 | 503, code: string, message: string) {
-  const body: ApiErrorBody = { error: { code, message } };
+  const body: ApiErrorBody = { error: message, code };
   return c.json(body, status);
 }
 

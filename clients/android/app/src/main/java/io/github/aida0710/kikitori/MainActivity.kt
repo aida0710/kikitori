@@ -141,7 +141,7 @@ class MainActivity : Activity() {
                         showMessage(getString(R.string.settings_connected_as, json.optString("username")), success = true)
                     } else {
                         // サーバーの文をそのまま出す
-                        val message = json?.optJSONObject("error")?.optString("message") ?: body
+                        val message = json?.optString("error")?.takeIf { it.isNotEmpty() } ?: body
                         showMessage(message, success = false)
                     }
                 }
