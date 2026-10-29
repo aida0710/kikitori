@@ -20,11 +20,21 @@ android {
         getByName("debug") {
             providers.environmentVariable("KIKITORI_DEBUG_KEYSTORE").orNull?.let { storeFile = file(it) }
         }
+        // 配る版の鍵。tools/build-release-apk.sh が鍵のファイルの場所とパスワードを環境変数で渡す（リポジトリには置かない）
+        create("release") {
+            providers.environmentVariable("KIKITORI_RELEASE_KEYSTORE").orNull?.let { storeFile = file(it) }
+            storeType = "PKCS12"
+            storePassword = providers.environmentVariable("KIKITORI_ANDROID_KEYSTORE_PASSWORD").orNull
+            keyAlias = providers.environmentVariable("KIKITORI_ANDROID_KEY_ALIAS").orNull
+            // PKCS12 の鍵は、鍵のパスワードも鍵のファイルのパスワードと同じ
+            keyPassword = providers.environmentVariable("KIKITORI_ANDROID_KEYSTORE_PASSWORD").orNull
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
