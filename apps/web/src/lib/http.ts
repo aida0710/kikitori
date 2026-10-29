@@ -5,6 +5,8 @@
 import { z } from "zod";
 
 export const NETWORK_ERROR_CODE = "network_error";
+/** どの API でも 401 が返ったら、この名前の出来事を window に送る（画面がログインの画面へ移るため）。 */
+export const UNAUTHORIZED_EVENT = "kikitori:unauthorized";
 const INVALID_RESPONSE_CODE = "invalid_response";
 const HTTP_NO_CONTENT = 204;
 const HTTP_UNAUTHORIZED = 401;
@@ -43,6 +45,9 @@ export async function requestJson<Schema extends z.ZodType>(
     throw new ApiError({ status: 0, code: NETWORK_ERROR_CODE, message: "Network request failed" });
   }
   const body = response.status === HTTP_NO_CONTENT ? undefined : await response.json().catch(() => undefined);
+  if (response.status === HTTP_UNAUTHORIZED) {
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+  }
   if (!response.ok) {
     const parsedError = apiErrorBodySchema.safeParse(body);
     throw parsedError.success
