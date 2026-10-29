@@ -1,6 +1,7 @@
 # RTX 3080 Ti の計算機（10.0.10.178）で、文字起こしと API サーバーを動かす。
 #   docker compose -f deploy/gpu3080/compose.yaml up -d --build
 # 端末からは http://10.0.10.178:8780 につなぐ（LAN と VPN の中だけ）。
+# ブラウザーのプレイグラウンドは https://10.0.10.178:8443 （マイクは HTTPS でしか使えないため）。
 name: kikitori
 
 services:
@@ -31,8 +32,21 @@ services:
       KIKITORI_ASR_URL: ws://asr:8781/v1/stream
       KIKITORI_INITIAL_ADMIN_PASSWORD_FILE: /run/secrets/kikitori/admin-password
       ANTHROPIC_API_KEY_FILE: /run/secrets/kikitori/anthropic-api-key
+      KIKITORI_HTTPS_URL: https://10.0.10.178:8443
     volumes:
       - ${HOME}/.local/share/kikitori:/data
       - ${HOME}/.config/kikitori:/run/secrets/kikitori:ro
     ports:
       - 10.0.10.178:8780:8780
+
+  https:
+    # Haru の入口と同じ Caddy のイメージ（この計算機にもうある）
+    image: caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+    restart: unless-stopped
+    depends_on:
+      - server
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${HOME}/.local/share/kikitori/caddy:/data
+    ports:
+      - 10.0.10.178:8443:8443

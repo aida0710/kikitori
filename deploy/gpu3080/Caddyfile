@@ -1,0 +1,15 @@
+# APIサーバーのHTTPSの入口。ブラウザーのマイク（プレイグラウンド）はHTTPSのページでしか使えないため。
+# 社内のLAN・VPNの中だけで使うので、証明書はCaddyの内部のCAが出す（ブラウザーは初回に警告を出す）。
+# CAの証明書は 3080Ti の ~/.local/share/kikitori/caddy/caddy/pki/authorities/local/root.crt。
+{
+	local_certs
+	skip_install_trust
+	auto_https disable_redirects
+	# IPアドレスで開くとブラウザーはSNI（接続先の名前）を送らないので、どの証明書を出すかをここで決める
+	default_sni 10.0.10.178
+}
+
+https://10.0.10.178:8443 {
+	tls internal
+	reverse_proxy server:8780
+}

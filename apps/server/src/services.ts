@@ -23,6 +23,7 @@ export interface ServerServices {
   correctionConfigured: boolean;
   correctorFor(settings: ServerSettings): TextCorrector;
   secureCookies: boolean;
+  httpsUrl: string | null;
 }
 
 export function createServices(input: {
@@ -52,5 +53,6 @@ export function createServices(input: {
       ((settings) =>
         settings.correctionEnabled && anthropic ? new ClaudeCorrector({ client: anthropic, settings }) : passthrough),
     secureCookies: config.secureCookies,
+    httpsUrl: config.httpsUrl,
   };
 }

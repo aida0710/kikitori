@@ -33,6 +33,8 @@ class KikitoriInputMethodService : InputMethodService(), DictationView {
     private var microphoneButton: ImageButton? = null
     private var committedText = ""
     private var partialText = ""
+    // 清書を待っている区切りより先に、次の区切りの途中結果が届くことがある。どの区切りの途中結果かを持つ
+    private var partialSegment = -1
 
     override fun onCreate() {
         super.onCreate()
@@ -82,6 +84,7 @@ class KikitoriInputMethodService : InputMethodService(), DictationView {
     private fun startDictation() {
         committedText = ""
         partialText = ""
+        partialSegment = -1
         renderTranscript()
         val settings = ClientSettings.load(this)
         val accessKey = AccessKeyStore.read(this)
@@ -125,17 +128,28 @@ class KikitoriInputMethodService : InputMethodService(), DictationView {
         levelRing?.scaleY = scale
     }
 
-    override fun showPartial(text: String) {
+    override fun showPartial(segment: Int, text: String) {
+        partialSegment = segment
         partialText = text
         currentInputConnection?.setComposingText(text, 1)
         renderTranscript()
     }
 
-    override fun commitSegment(text: String) {
-        // 未確定の文字（途中結果）を、清書した文で置き換えて確定する
-        currentInputConnection?.commitText(text, 1)
+    override fun commitSegment(segment: Int, text: String) {
+        val connection = currentInputConnection
+        if (partialSegment > segment) {
+            // 未確定の文字は後の区切りのもの。それを一度外して確定した文を入れ、後ろに付け直す
+            connection?.beginBatchEdit()
+            connection?.setComposingText("", 1)
+            connection?.commitText(text, 1)
+            connection?.setComposingText(partialText, 1)
+            connection?.endBatchEdit()
+        } else {
+            // 未確定の文字（この区切りの途中結果）を、清書した文で置き換えて確定する
+            connection?.commitText(text, 1)
+            partialText = ""
+        }
         committedText += text
-        partialText = ""
         renderTranscript()
     }
 

@@ -47,9 +47,13 @@ export function SelectField({
   );
 }
 
-export function CheckboxField({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+export function CheckboxField({
+  label,
+  className = "mb-5",
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
-    <label className="mb-5 flex cursor-pointer items-center gap-2.5">
+    <label className={`flex cursor-pointer items-center gap-2.5 ${className}`}>
       <input type="checkbox" className="size-4 accent-accent" {...props} />
       <span>{label}</span>
     </label>

@@ -25,6 +25,8 @@ public partial class DictationWindow : Window
     private readonly DispatcherTimer hideTimer;
     private string committedText = "";
     private string partialText = "";
+    // 清書を待っている区切りより先に、次の区切りの途中結果が届くことがある。どの区切りの途中結果かを持つ
+    private int partialSegment = -1;
 
     public event EventHandler? StopRequested;
     public event EventHandler? CancelRequested;
@@ -56,6 +58,7 @@ public partial class DictationWindow : Window
         hideTimer.Stop();
         committedText = "";
         partialText = "";
+        partialSegment = -1;
         RenderTranscript();
         SetStatus(UiText.Connecting, listening: false);
         if (!IsVisible)
@@ -69,16 +72,20 @@ public partial class DictationWindow : Window
 
     public void ShowFinishing() => SetStatus(UiText.Finishing, listening: false);
 
-    public void ShowPartial(string text)
+    public void ShowPartial(int segment, string text)
     {
+        partialSegment = segment;
         partialText = text;
         RenderTranscript();
     }
 
-    public void ShowCommitted(string text)
+    public void ShowCommitted(int segment, string text)
     {
         committedText += text;
-        partialText = "";
+        if (partialSegment <= segment)
+        {
+            partialText = "";
+        }
         RenderTranscript();
     }
 

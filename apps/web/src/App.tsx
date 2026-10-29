@@ -9,6 +9,7 @@ import { AccessKeysPage } from "./pages/AccessKeysPage.tsx";
 import { HistoryPage } from "./pages/HistoryPage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
 import { OverviewPage } from "./pages/OverviewPage.tsx";
+import { PlaygroundPage } from "./pages/PlaygroundPage.tsx";
 import { ServerSettingsPage } from "./pages/ServerSettingsPage.tsx";
 import { SettingsPage } from "./pages/SettingsPage.tsx";
 import { UsersPage } from "./pages/UsersPage.tsx";
@@ -48,6 +49,7 @@ export function App() {
     <Routes>
       <Route element={<AppShell user={user} onLoggedOut={me.reload} />}>
         <Route index element={<OverviewPage />} />
+        <Route path="playground" element={<PlaygroundPage />} />
         <Route path="keys" element={<AccessKeysPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="settings" element={<SettingsPage />} />

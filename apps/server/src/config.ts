@@ -15,6 +15,8 @@ export interface ServerConfig {
   webDirectory: string | null;
   // HTTPS の後ろで動かすときは true にして、ログインの cookie に Secure を付ける
   secureCookies: boolean;
+  // HTTP と HTTPS の両方の入口があるときの HTTPS の側（プレイグラウンドの案内に使う）
+  httpsUrl: string | null;
 }
 
 function readSecret(env: NodeJS.ProcessEnv, name: string): string | null {
@@ -38,5 +40,6 @@ export function readServerConfig(env: NodeJS.ProcessEnv = process.env): ServerCo
     initialAdminPassword: readSecret(env, "KIKITORI_INITIAL_ADMIN_PASSWORD"),
     webDirectory: env.KIKITORI_WEB_DIRECTORY ?? null,
     secureCookies: env.KIKITORI_SECURE_COOKIES === "true",
+    httpsUrl: env.KIKITORI_HTTPS_URL?.trim() || null,
   };
 }

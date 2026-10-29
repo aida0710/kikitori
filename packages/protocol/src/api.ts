@@ -100,6 +100,8 @@ export type Dictation = z.infer<typeof dictationSchema>;
 export const serverStatusSchema = z.object({
   asr: z.object({ reachable: z.boolean(), model: z.string().nullable() }),
   correction: z.object({ configured: z.boolean() }),
+  // ブラウザーのマイクは HTTPS でしか使えない。HTTP で開いた画面が案内に使う、このサーバーの HTTPS の入口
+  httpsUrl: z.string().nullable(),
 });
 export type ServerStatus = z.infer<typeof serverStatusSchema>;
 

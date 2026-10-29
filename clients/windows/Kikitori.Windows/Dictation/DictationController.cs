@@ -177,13 +177,13 @@ internal sealed class DictationController
                 break;
             case PartialEvent partial:
                 lastActivity = DateTime.UtcNow;
-                window.ShowPartial(partial.Text);
+                window.ShowPartial(partial.Segment, partial.Text);
                 break;
             case SegmentEvent segment:
                 lastActivity = DateTime.UtcNow;
                 log($"segment {segment.Segment} corrected={segment.Corrected} text={segment.Text}");
                 TypeSegment(segment.Text);
-                window.ShowCommitted(segment.Text);
+                window.ShowCommitted(segment.Segment, segment.Text);
                 break;
             case ErrorEvent error:
                 log($"error {error.Code}: {error.Message}");

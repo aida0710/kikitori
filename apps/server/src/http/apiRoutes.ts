@@ -73,6 +73,7 @@ export function createApiRoutes(services: ServerServices): Hono<AppEnv> {
     const status: ServerStatus = {
       asr: await services.asrWorker.checkHealth(),
       correction: { configured: services.correctionConfigured },
+      httpsUrl: services.httpsUrl,
     };
     return c.json(status);
   });

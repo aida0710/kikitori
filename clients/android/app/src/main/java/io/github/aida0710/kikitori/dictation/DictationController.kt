@@ -14,8 +14,8 @@ interface DictationView {
     fun showListening()
     fun showFinishing()
     fun showLevel(level: Float)
-    fun showPartial(text: String)
-    fun commitSegment(text: String)
+    fun showPartial(segment: Int, text: String)
+    fun commitSegment(segment: Int, text: String)
     fun showError(message: String)
     fun finished(reason: FinishReason)
 }
@@ -92,11 +92,11 @@ class DictationController(
             is DictationEvent.Ready -> view.showListening()
             is DictationEvent.Partial -> {
                 lastActivity = SystemClock.elapsedRealtime()
-                view.showPartial(event.text)
+                view.showPartial(event.segment, event.text)
             }
             is DictationEvent.Segment -> {
                 lastActivity = SystemClock.elapsedRealtime()
-                view.commitSegment(event.text)
+                view.commitSegment(event.segment, event.text)
             }
             is DictationEvent.Error -> view.showError(event.message)
             is DictationEvent.Failed -> {
